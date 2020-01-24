@@ -1,0 +1,6 @@
+set '0' 1   // val in reg 1 will be incremented (starts at 0)
+set '1' 2   // it will be incremented by reg 2 which is set to a value of 1
+in 3        // user inputs a number into reg 3
+add 1 2 1   // adds 1 (reg 2) to reg 1
+out 1       // write the current value
+jlt 1 3 4   // if less than target then jump to line 4 to add again
