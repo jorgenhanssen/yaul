@@ -35,7 +35,7 @@ func ReadFile(filename string) (string, error) {
 	return string(b), nil
 }
 
-func ParseFile(fileData string) (Instructions, error) {
+func extractInstructions(fileData string) (Instructions, error) {
 	lines := strings.Split(fileData, "\n")
 
 	var instructions Instructions

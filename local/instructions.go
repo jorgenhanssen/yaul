@@ -49,9 +49,16 @@ var iMap = map[string]int{
 	"TERM": iTerminate,
 }
 
-func RunInstruction(i *Instruction) error {
-	instructionPosition++
+// jumpToLine is a helper that ticks the program counter
+// to the correct address for when the next instruction is run.
+// we need to subtract 2 from the address:
+// 	1 - the addresses are shifted 1 down from their reference in a text file (line numbers start a 1)
+//  2 - the program counter is incremented by 1 after the jumpToLine command is run (before next read)
+func jumpToLine(line int) {
+	programCounter = line - 2
+}
 
+func RunInstruction(i *Instruction) error {
 	switch i.command {
 	case iTerminate:
 		{
@@ -314,7 +321,7 @@ func Jmp(address *Param) error {
 	if err != nil {
 		return err
 	}
-	instructionPosition = reg - 1
+	jumpToLine(reg)
 	return nil
 }
 func Jgt(a, b, address *Param) error {
@@ -341,7 +348,7 @@ func Jgt(a, b, address *Param) error {
 		return err
 	}
 	if valueA > valueB {
-		instructionPosition = reg - 1
+		jumpToLine(reg)
 	}
 	return nil
 }
@@ -369,7 +376,7 @@ func Jeq(a, b, address *Param) error {
 		return err
 	}
 	if valueA == valueB {
-		instructionPosition = reg - 1
+		jumpToLine(reg)
 	}
 	return nil
 }
@@ -397,7 +404,7 @@ func Jlt(a, b, address *Param) error {
 		return err
 	}
 	if valueA < valueB {
-		instructionPosition = reg - 1
+		jumpToLine(reg)
 	}
 	return nil
 }

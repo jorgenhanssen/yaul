@@ -15,6 +15,9 @@ func (i *Instance) Read(address int) (interface{}, error) {
 		return 0, errAddressOutsideMemory(address, i)
 	}
 	val := i.memory[address]
+	if val == nil {
+		return nil, ErrNilValue
+	}
 	return val, nil
 }
 

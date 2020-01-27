@@ -7,7 +7,7 @@ import (
 )
 
 var (
-	instructionPosition int
+	programCounter int
 
 	instructions *tape.Instance
 	values       *tape.Instance
@@ -26,25 +26,26 @@ func main() {
 		return
 	}
 
+	// read program file and parse instructions
 	fileData, err := ReadFile(os.Args[1])
 	ensure(err)
-
-	parsedInstructions, err := ParseFile(fileData)
+	instructionSet, err := extractInstructions(fileData)
 	ensure(err)
 
-	for i, instruction := range parsedInstructions {
+	// Insert instructions to tape
+	for i, instruction := range instructionSet {
 		ensure(instructions.Write(i, instruction))
 	}
 
 	// run program
-	for {
-		i, err := instructions.Read(instructionPosition)
-		ensure(err)
-		if i == nil {
-			// no more instructions
-			break
+	for ; ; programCounter++ {
+		i, err := instructions.Read(programCounter)
+		if err == tape.ErrNilValue {
+			break // no more instructions
 		}
+		ensure(err)
 
+		// programCounter++
 		err = RunInstruction(i.(*Instruction))
 		if err == ErrTerminate {
 			break // program invoked exit
