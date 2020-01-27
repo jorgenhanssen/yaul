@@ -41,12 +41,13 @@ func main() {
 		i, err := instructions.Read(instructionPosition)
 		ensure(err)
 		if i == nil {
+			// no more instructions
 			break
 		}
 
 		err = RunInstruction(i.(*Instruction))
 		if err == ErrTerminate {
-			break
+			break // program invoked exit
 		}
 		ensure(err)
 	}

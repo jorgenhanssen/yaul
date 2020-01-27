@@ -1,0 +1,9 @@
+in 1            // REG1: iterator start value
+in 2            // REG2: MAX iterator value
+set '1' 3       // REG3: iterator increment value
+mov 1 &1        // push value at REG1 into array[&1]
+add 1 3 1       // iterator++
+jlt 1 2 4       // while iterator < max
+in 5
+out &5          // Read user inputted register
+term

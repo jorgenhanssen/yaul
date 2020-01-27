@@ -10,7 +10,8 @@ import (
 )
 
 var (
-	ErrTerminate = errors.New("Program end.")
+	ErrTerminate                = errors.New("Program end.")
+	ErrValuesCannotBeReferences = errors.New("Values cannot be references")
 )
 
 const (
@@ -30,6 +31,7 @@ const (
 	iTerminate       = 15
 )
 
+// iMap (instruction map) is used for mapping instructions from files
 var iMap = map[string]int{
 	"SET":  iSet,
 	"IN":   iInput,
@@ -57,55 +59,55 @@ func RunInstruction(i *Instruction) error {
 		}
 	case iSet:
 		{
-			return Set(i.data[0], i.data[1])
+			return Set(i.params[0], i.params[1])
 		}
 	case iInput:
 		{
-			return In(i.data[0])
+			return In(i.params[0])
 		}
 	case iOutput:
 		{
-			return Out(i.data[0])
+			return Out(i.params[0])
 		}
 	case iAdd:
 		{
-			return Add(i.data[0], i.data[1], i.data[2])
+			return Add(i.params[0], i.params[1], i.params[2])
 		}
 	case iSubtract:
 		{
-			return Sub(i.data[0], i.data[1], i.data[2])
+			return Sub(i.params[0], i.params[1], i.params[2])
 		}
 	case iMultiply:
 		{
-			return Mul(i.data[0], i.data[1], i.data[2])
+			return Mul(i.params[0], i.params[1], i.params[2])
 		}
 	case iDivide:
 		{
-			return Div(i.data[0], i.data[1], i.data[2])
+			return Div(i.params[0], i.params[1], i.params[2])
 		}
 	case iModulo:
 		{
-			return Mod(i.data[0], i.data[1], i.data[2])
+			return Mod(i.params[0], i.params[1], i.params[2])
 		}
 	case iJump:
 		{
-			return Jmp(i.data[0])
+			return Jmp(i.params[0])
 		}
 	case iJumpGreaterThan:
 		{
-			return Jgt(i.data[0], i.data[1], i.data[2])
+			return Jgt(i.params[0], i.params[1], i.params[2])
 		}
 	case iJumpEqual:
 		{
-			return Jeq(i.data[0], i.data[1], i.data[2])
+			return Jeq(i.params[0], i.params[1], i.params[2])
 		}
 	case iJumpLessThan:
 		{
-			return Jlt(i.data[0], i.data[1], i.data[2])
+			return Jlt(i.params[0], i.params[1], i.params[2])
 		}
 	case iMove:
 		{
-			return Mov(i.data[0], i.data[1])
+			return Mov(i.params[0], i.params[1])
 		}
 	default:
 		{
@@ -114,10 +116,17 @@ func RunInstruction(i *Instruction) error {
 	}
 }
 
-func Set(val, address int) error {
-	return values.Write(address, val)
+func Set(val, address *Param) error {
+	if val.isReference {
+		return ErrValuesCannotBeReferences
+	}
+	reg, err := safeReadAddress(address)
+	if err != nil {
+		return err
+	}
+	return values.Write(reg, val.data)
 }
-func In(address int) error {
+func In(address *Param) error {
 	reader := bufio.NewReader(os.Stdin)
 	text, err := reader.ReadString('\n')
 	if err != nil {
@@ -131,130 +140,264 @@ func In(address int) error {
 		return err
 	}
 
-	return values.Write(address, num)
+	reg, err := safeReadAddress(address)
+	if err != nil {
+		return err
+	}
+	return values.Write(reg, num)
 }
-func Out(address int) error {
-	val, err := safeReadInt(address)
+func Out(address *Param) error {
+	reg, err := safeReadAddress(address)
+	if err != nil {
+		return err
+	}
+
+	val, err := safeReadInt(reg)
 	if err != nil {
 		return err
 	}
 	println(val)
 	return nil
 }
-func Mov(a, b int) error {
-	valueA, err := safeReadInt(a)
+func Mov(a, b *Param) error {
+	regA, err := safeReadAddress(a)
 	if err != nil {
 		return err
 	}
-	return values.Write(b, valueA)
+	valueA, err := safeReadInt(regA)
+	if err != nil {
+		return err
+	}
+
+	regB, err := safeReadAddress(b)
+	if err != nil {
+		return err
+	}
+
+	return values.Write(regB, valueA)
 }
 
 // Arithmetic
-func Add(a, b, dest int) error {
-	valueA, err := safeReadInt(a)
+func Add(a, b, dest *Param) error {
+	regA, err := safeReadAddress(a)
 	if err != nil {
 		return err
 	}
-	valueB, err := safeReadInt(b)
+	valueA, err := safeReadInt(regA)
 	if err != nil {
 		return err
 	}
 
-	return values.Write(dest, valueA+valueB)
+	regB, err := safeReadAddress(b)
+	if err != nil {
+		return err
+	}
+	valueB, err := safeReadInt(regB)
+	if err != nil {
+		return err
+	}
+
+	regDest, err := safeReadAddress(dest)
+	if err != nil {
+		return err
+	}
+	return values.Write(regDest, valueA+valueB)
 }
 
-func Sub(a, b, dest int) error {
-	valueA, err := safeReadInt(a)
+func Sub(a, b, dest *Param) error {
+	regA, err := safeReadAddress(a)
 	if err != nil {
 		return err
 	}
-	valueB, err := safeReadInt(b)
+	valueA, err := safeReadInt(regA)
 	if err != nil {
 		return err
 	}
-	return values.Write(dest, valueA-valueB)
+
+	regB, err := safeReadAddress(b)
+	if err != nil {
+		return err
+	}
+	valueB, err := safeReadInt(regB)
+	if err != nil {
+		return err
+	}
+
+	regDest, err := safeReadAddress(dest)
+	if err != nil {
+		return err
+	}
+	return values.Write(regDest, valueA-valueB)
 }
 
-func Mul(a, b, dest int) error {
-	valueA, err := safeReadInt(a)
+func Mul(a, b, dest *Param) error {
+	regA, err := safeReadAddress(a)
 	if err != nil {
 		return err
 	}
-	valueB, err := safeReadInt(b)
+	valueA, err := safeReadInt(regA)
 	if err != nil {
 		return err
 	}
-	return values.Write(dest, valueA*valueB)
+
+	regB, err := safeReadAddress(b)
+	if err != nil {
+		return err
+	}
+	valueB, err := safeReadInt(regB)
+	if err != nil {
+		return err
+	}
+
+	regDest, err := safeReadAddress(dest)
+	if err != nil {
+		return err
+	}
+	return values.Write(regDest, valueA*valueB)
 }
 
-func Div(a, b, dest int) error {
-	valueA, err := safeReadInt(a)
+func Div(a, b, dest *Param) error {
+	regA, err := safeReadAddress(a)
 	if err != nil {
 		return err
 	}
-	valueB, err := safeReadInt(b)
+	valueA, err := safeReadInt(regA)
 	if err != nil {
 		return err
 	}
-	return values.Write(dest, valueA/valueB)
+
+	regB, err := safeReadAddress(b)
+	if err != nil {
+		return err
+	}
+	valueB, err := safeReadInt(regB)
+	if err != nil {
+		return err
+	}
+
+	regDest, err := safeReadAddress(dest)
+	if err != nil {
+		return err
+	}
+	return values.Write(regDest, valueA/valueB)
 }
 
-func Mod(a, b, dest int) error {
-	valueA, err := safeReadInt(a)
+func Mod(a, b, dest *Param) error {
+	regA, err := safeReadAddress(a)
 	if err != nil {
 		return err
 	}
-	valueB, err := safeReadInt(b)
+	valueA, err := safeReadInt(regA)
 	if err != nil {
 		return err
 	}
-	return values.Write(dest, valueA%valueB)
+
+	regB, err := safeReadAddress(b)
+	if err != nil {
+		return err
+	}
+	valueB, err := safeReadInt(regB)
+	if err != nil {
+		return err
+	}
+
+	regDest, err := safeReadAddress(dest)
+	if err != nil {
+		return err
+	}
+	return values.Write(regDest, valueA%valueB)
 }
 
 // Conditions
-func Jmp(address int) error {
-	instructionPosition = address - 1
-	return nil
-}
-func Jgt(a, b, address int) error {
-	valueA, err := safeReadInt(a)
+func Jmp(address *Param) error {
+	reg, err := safeReadAddress(address)
 	if err != nil {
 		return err
 	}
-	valueB, err := safeReadInt(b)
+	instructionPosition = reg - 1
+	return nil
+}
+func Jgt(a, b, address *Param) error {
+	regA, err := safeReadAddress(a)
+	if err != nil {
+		return err
+	}
+	valueA, err := safeReadInt(regA)
+	if err != nil {
+		return err
+	}
+
+	regB, err := safeReadAddress(b)
+	if err != nil {
+		return err
+	}
+	valueB, err := safeReadInt(regB)
+	if err != nil {
+		return err
+	}
+
+	reg, err := safeReadAddress(address)
 	if err != nil {
 		return err
 	}
 	if valueA > valueB {
-		instructionPosition = address - 1
+		instructionPosition = reg - 1
 	}
 	return nil
 }
-func Jeq(a, b, address int) error {
-	valueA, err := safeReadInt(a)
+func Jeq(a, b, address *Param) error {
+	regA, err := safeReadAddress(a)
 	if err != nil {
 		return err
 	}
-	valueB, err := safeReadInt(b)
+	valueA, err := safeReadInt(regA)
+	if err != nil {
+		return err
+	}
+
+	regB, err := safeReadAddress(b)
+	if err != nil {
+		return err
+	}
+	valueB, err := safeReadInt(regB)
+	if err != nil {
+		return err
+	}
+
+	reg, err := safeReadAddress(address)
 	if err != nil {
 		return err
 	}
 	if valueA == valueB {
-		instructionPosition = address - 1
+		instructionPosition = reg - 1
 	}
 	return nil
 }
-func Jlt(a, b, address int) error {
-	valueA, err := safeReadInt(a)
+func Jlt(a, b, address *Param) error {
+	regA, err := safeReadAddress(a)
 	if err != nil {
 		return err
 	}
-	valueB, err := safeReadInt(b)
+	valueA, err := safeReadInt(regA)
+	if err != nil {
+		return err
+	}
+
+	regB, err := safeReadAddress(b)
+	if err != nil {
+		return err
+	}
+	valueB, err := safeReadInt(regB)
+	if err != nil {
+		return err
+	}
+
+	reg, err := safeReadAddress(address)
 	if err != nil {
 		return err
 	}
 	if valueA < valueB {
-		instructionPosition = address - 1
+		instructionPosition = reg - 1
 	}
 	return nil
 }

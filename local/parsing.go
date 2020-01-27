@@ -9,9 +9,14 @@ import (
 	"strings"
 )
 
+type Param struct {
+	isReference bool
+	data        int
+}
+
 type Instruction struct {
 	command int
-	data    []int
+	params  []*Param
 }
 type Instructions []*Instruction
 
@@ -58,7 +63,7 @@ func parseInstruction(iLine string) (*Instruction, error) {
 
 	stringData = stringData[1:]
 
-	var data []int
+	var params []*Param
 	for _, str := range stringData {
 		if str == "" {
 			continue // ignore multiple whitespaces
@@ -67,21 +72,30 @@ func parseInstruction(iLine string) (*Instruction, error) {
 			break // ignore comments
 		}
 
-		// values can have '' for easy reading
-		str = strings.TrimPrefix(str, "'")
-		str = strings.TrimSuffix(str, "'")
+		isReference := false
+		if strings.HasPrefix(str, "&") {
+			str = strings.TrimPrefix(str, "&")
+			isReference = true
+		} else {
+			// values can have '' for better readability
+			str = strings.TrimPrefix(str, "'")
+			str = strings.TrimSuffix(str, "'")
+		}
 
 		num, err := strconv.Atoi(str)
 		if err != nil {
 			return nil, err
 		}
 
-		data = append(data, num)
+		params = append(params, &Param{
+			isReference: isReference,
+			data:        num,
+		})
 	}
 
 	return &Instruction{
 		command: iID,
-		data:    data,
+		params:  params,
 	}, nil
 }
 
@@ -103,4 +117,17 @@ func safeReadInt(address int) (int, error) {
 		return 0, err
 	}
 	return safeVal, nil
+}
+
+// used to return an address or a reference
+func safeReadAddress(address *Param) (int, error) {
+	reg := address.data
+	if address.isReference {
+		var err error
+		reg, err = safeReadInt(address.data)
+		if err != nil {
+			return 0, err
+		}
+	}
+	return reg, nil
 }
