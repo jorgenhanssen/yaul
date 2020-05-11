@@ -1,15 +1,15 @@
 set '0' 1       // REG1: index value
 set '100' 2     // REG2: offset value (to avoid overwriting registers)
-mov 2 3         // REG3: incremented offset value
+mov 2 3         // REG3: incremented/mutating offset value
 set '1' 4       // REG4: iterator increment value
 in 5            // REG5: user inputs array length
-in &3           // user adds a value to the array at index &2
+in &3           // user adds a value to the array at current offset index (reg &3)
 add 1 4 1       // iterator++
 add 3 4 3       // updated offset index (memory reg)
 jlt 1 5 6       // while iterator < max
-set '0' 10      // REG11: used for infinite loop
-set '1' 11      // REG12: used for infinite loop
-in 6            // user inputs the index to see 
+set '0' 10      // REG10: used for infinite loop
+set '1' 11      // REG11: used for infinite loop
+in 6            // user inputs the index to print
 add 6 2 6       // add offset when finding
 out &6          // print the user-inputted value at index
 jlt 10 11 12    // loop user back to inputting a index

@@ -32,7 +32,7 @@ func main() {
 	instructionSet, err := extractInstructions(fileData)
 	ensure(err)
 
-	// Insert instructions to tape
+	// Insert instructions
 	for i, instruction := range instructionSet {
 		ensure(instructions.Write(i, instruction))
 	}
