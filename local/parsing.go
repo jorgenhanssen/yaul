@@ -25,14 +25,14 @@ func ReadFile(filename string) (string, error) {
 	if err != nil {
 		return "", err
 	}
+
 	defer file.Close()
 
-	b, err := ioutil.ReadAll(file)
-	if err != nil {
+	if b, err := ioutil.ReadAll(file); err != nil {
 		return "", err
+	} else {
+		return string(b), nil
 	}
-
-	return string(b), nil
 }
 
 func extractInstructions(fileData string) (Instructions, error) {
@@ -40,11 +40,11 @@ func extractInstructions(fileData string) (Instructions, error) {
 
 	var instructions Instructions
 	for i, line := range lines {
-		instruction, err := parseInstruction(line)
-		if err != nil {
+		if instruction, err := parseInstruction(line); err != nil {
 			return nil, fmt.Errorf("Error at line %d: %v", i+1, err)
+		} else {
+			instructions = append(instructions, instruction)
 		}
-		instructions = append(instructions, instruction)
 	}
 
 	return instructions, nil

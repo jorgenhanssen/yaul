@@ -29,11 +29,11 @@ func main() {
 	// read program file and parse instructions
 	fileData, err := ReadFile(os.Args[1])
 	ensure(err)
-	instructionSet, err := extractInstructions(fileData)
+	program, err := extractInstructions(fileData)
 	ensure(err)
 
 	// Insert instructions
-	for i, instruction := range instructionSet {
+	for i, instruction := range program {
 		ensure(instructions.Write(i, instruction))
 	}
 
