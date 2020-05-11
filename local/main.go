@@ -13,9 +13,12 @@ var (
 	values       *tape.Instance
 )
 
+const maxInstructions = 256
+const maxHeapSize = 256
+
 func main() {
-	instructions = tape.New(256)
-	values = tape.New(256)
+	instructions = tape.New(maxInstructions)
+	values = tape.New(maxHeapSize)
 
 	if len(os.Args) == 1 {
 		println("No file specified.")
