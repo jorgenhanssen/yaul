@@ -55,13 +55,14 @@ var iMap = map[string]int{
 // 	1 - the addresses are shifted 1 down from their reference in a text file (line numbers start a 1)
 //  2 - the program counter is incremented by 1 after the jumpTo command is run (before next read)
 func jumpTo(reg int) {
-	programCounter = reg - 2
+	programCursor = reg - 2
 }
 
 func RunInstruction(i *Instruction) error {
 	switch i.command {
 	case iTerminate:
 		{
+			logger.Silent("Terminate")
 			return ErrTerminate
 		}
 	case iSet:
@@ -131,6 +132,8 @@ func Set(val, address *Param) error {
 	if err != nil {
 		return err
 	}
+
+	logger.Silent(fmt.Sprintf("Set value '%d' into #%d", val.data, reg))
 	return values.Write(reg, val.data)
 }
 func In(address *Param) error {
@@ -151,6 +154,8 @@ func In(address *Param) error {
 	if err != nil {
 		return err
 	}
+
+	logger.Silent(fmt.Sprintf("Input value '%d' into #%d", num, reg))
 	return values.Write(reg, num)
 }
 func Out(address *Param) error {
@@ -163,6 +168,8 @@ func Out(address *Param) error {
 	if err != nil {
 		return err
 	}
+
+	logger.Silent(fmt.Sprintf("Output from #%d ('%d')", reg, val))
 	println(val)
 	return nil
 }
@@ -181,6 +188,7 @@ func Mov(a, b *Param) error {
 		return err
 	}
 
+	logger.Silent(fmt.Sprintf("Move #%d ('%d') into #%d", regA, valueA, regB))
 	return values.Write(regB, valueA)
 }
 
@@ -208,6 +216,8 @@ func Add(a, b, dest *Param) error {
 	if err != nil {
 		return err
 	}
+
+	logger.Silent(fmt.Sprintf("Add #%d ('%d') and #%d ('%d') into #%d ('%d')", regA, valueA, regB, valueB, regDest, valueA+valueB))
 	return values.Write(regDest, valueA+valueB)
 }
 
@@ -234,6 +244,7 @@ func Sub(a, b, dest *Param) error {
 	if err != nil {
 		return err
 	}
+	logger.Silent(fmt.Sprintf("Subtract #%d ('%d') from #%d ('%d') into #%d ('%d')", regA, valueA, regB, valueB, regDest, valueA-valueB))
 	return values.Write(regDest, valueA-valueB)
 }
 
@@ -260,6 +271,7 @@ func Mul(a, b, dest *Param) error {
 	if err != nil {
 		return err
 	}
+	logger.Silent(fmt.Sprintf("Multiply #%d ('%d') and #%d ('%d') into #%d ('%d')", regA, valueA, regB, valueB, regDest, valueA*valueB))
 	return values.Write(regDest, valueA*valueB)
 }
 
@@ -286,6 +298,7 @@ func Div(a, b, dest *Param) error {
 	if err != nil {
 		return err
 	}
+	logger.Silent(fmt.Sprintf("Divide #%d ('%d') by #%d ('%d') into #%d ('%d')", regA, valueA, regB, valueB, regDest, valueA/valueB))
 	return values.Write(regDest, valueA/valueB)
 }
 
@@ -312,6 +325,7 @@ func Mod(a, b, dest *Param) error {
 	if err != nil {
 		return err
 	}
+	logger.Silent(fmt.Sprintf("Modulo #%d ('%d') by #%d ('%d') into #%d ('%d')", regA, valueA, regB, valueB, regDest, valueA%valueB))
 	return values.Write(regDest, valueA%valueB)
 }
 
@@ -322,6 +336,7 @@ func Jmp(address *Param) error {
 		return err
 	}
 	jumpTo(reg)
+	logger.Silent(fmt.Sprintf("Jump to l%d", reg))
 	return nil
 }
 func Jgt(a, b, address *Param) error {
@@ -348,6 +363,7 @@ func Jgt(a, b, address *Param) error {
 		return err
 	}
 	if valueA > valueB {
+		logger.Silent(fmt.Sprintf("Jump to l%d [#%d ('%d') > #%d ('%d')]", reg, regA, valueA, regB, valueB))
 		jumpTo(reg)
 	}
 	return nil
@@ -376,6 +392,7 @@ func Jeq(a, b, address *Param) error {
 		return err
 	}
 	if valueA == valueB {
+		logger.Silent(fmt.Sprintf("Jump to l%d [#%d ('%d') == #%d ('%d')]", reg, regA, valueA, regB, valueB))
 		jumpTo(reg)
 	}
 	return nil
@@ -404,6 +421,7 @@ func Jlt(a, b, address *Param) error {
 		return err
 	}
 	if valueA < valueB {
+		logger.Silent(fmt.Sprintf("Jump to l%d [#%d ('%d') < #%d ('%d')]", reg, regA, valueA, regB, valueB))
 		jumpTo(reg)
 	}
 	return nil
