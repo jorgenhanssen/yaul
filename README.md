@@ -16,6 +16,8 @@ Maybe - a beautiful day - I will write how to use the language. For now look at 
 
 ## Running existing programs
 
+`make file=<path_to_program>`
+
 ### programs/array
 
 A program that let's the user define an array and enter indices to see what is in the array.
