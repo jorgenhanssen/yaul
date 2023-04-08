@@ -54,16 +54,21 @@ func (p *Parser) extractInstructions(fileData string) (Instructions, error) {
 			return nil, fmt.Errorf("Error at line %d: %v", i+1, err)
 		}
 
+		// Instruction may be nil if line is a comment or empty line
 		if instruction != nil {
-			// Instruction may be nil if line is a comment or empty line
 			instructions = append(instructions, instruction)
 		}
 	}
 
-	// resolve jumps
+	p.resolveJumpLineOffsets(&lines, &instructions)
+
+	return instructions, nil
+}
+
+func (p *Parser) resolveJumpLineOffsets(lines *[]string, instructions *Instructions) {
 	lineToInstructionIndex := map[int]int{} // code line => instruction index
 	offset := 0
-	for i, line := range lines {
+	for i, line := range *lines {
 		if lineIsNonFunctional(line) {
 			offset++
 			continue
@@ -76,15 +81,13 @@ func (p *Parser) extractInstructions(fileData string) (Instructions, error) {
 	}
 
 	// adjust jump addresses from code line to instruction index
-	for _, in := range instructions {
+	for _, in := range *instructions {
 		if isOneOf(in.command, iJumpGreaterThan, iJumpEqual, iJumpLessThan) {
 			in.params[2].data = lineToInstructionIndex[in.params[2].data]
-		} else if isOneOf(in.command, iJump) {
+		} else if in.command == iJump {
 			in.params[0].data = lineToInstructionIndex[in.params[0].data]
 		}
 	}
-
-	return instructions, nil
 }
 
 func (p *Parser) parseInstruction(iLine string) (*Instruction, error) {
@@ -99,10 +102,8 @@ func (p *Parser) parseInstruction(iLine string) (*Instruction, error) {
 		return nil, fmt.Errorf("unknown instruction '%s'", iLine)
 	}
 
-	stringData = stringData[1:]
-
 	var params []*Param
-	for _, str := range stringData {
+	for _, str := range stringData[1:] {
 		if str == "" {
 			continue // ignore multiple whitespaces
 		}
