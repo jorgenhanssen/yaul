@@ -1,0 +1,26 @@
+// A simple program to calculate the first n Fibonacci numbers.
+
+in 0 // how many numbers to calculate
+
+// Fibonacci variables
+set '0' 1 // previous number
+set '1' 2 // current number
+set '0' 3 // temporary variable
+
+// Loop variables
+set '0' 4 // loop counter
+set '1' 5 // increment
+
+// Print the first 2 numbers already in the registers
+out 1
+out 2
+set '2' 6 // remove the first 2 numbers from the loop
+sub 0 6 0 // n = n - 2
+
+// Fibonacci loop
+add 1 2 3   // temp = prev + curr
+out 3       // print temp
+mov 2 1     // prev = curr
+mov 3 2     // curr = temp
+add 5 4 4   // increment loop counter
+jlt 4 0 21  // if loop counter < n, re-loop
