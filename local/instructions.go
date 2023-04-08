@@ -137,6 +137,7 @@ func Set(val, address *Param) error {
 	return values.Write(reg, val.data)
 }
 func In(address *Param) error {
+	fmt.Print("Input: ")
 	reader := bufio.NewReader(os.Stdin)
 	text, err := reader.ReadString('\n')
 	if err != nil {
