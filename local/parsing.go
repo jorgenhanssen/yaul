@@ -9,7 +9,6 @@ import (
 )
 
 type Parser struct {
-	// offset         int
 	jumpsToResolve map[int]bool
 }
 
