@@ -6,10 +6,14 @@ import (
 	"os"
 	"strconv"
 	"strings"
+
+	"github.com/jorgenhanssen/a-machine/local/logging"
 )
 
 type Parser struct {
-	jumpsToResolve map[int]bool
+	logger            *logging.Instance
+	instructionCursor int
+	labels            map[string]int
 }
 
 type Param struct {
@@ -38,14 +42,17 @@ func ReadFile(filename string) (string, error) {
 	}
 }
 
-func NewParser() *Parser {
+func NewParser(logger *logging.Instance) *Parser {
 	return &Parser{
-		jumpsToResolve: map[int]bool{},
+		logger: logger,
+		labels: map[string]int{},
 	}
 }
 
 func (p *Parser) extractInstructions(fileData string) (Instructions, error) {
 	lines := strings.Split(fileData, "\n")
+
+	p.resolveLabels(&lines)
 
 	var instructions Instructions
 	for i, line := range lines {
@@ -57,16 +64,14 @@ func (p *Parser) extractInstructions(fileData string) (Instructions, error) {
 		// Instruction may be nil if line is a comment or empty line
 		if instruction != nil {
 			instructions = append(instructions, instruction)
+			p.instructionCursor++
 		}
 	}
-
-	p.resolveJumpLineOffsets(&lines, &instructions)
 
 	return instructions, nil
 }
 
-func (p *Parser) resolveJumpLineOffsets(lines *[]string, instructions *Instructions) {
-	lineToInstructionIndex := map[int]int{} // code line => instruction index
+func (p *Parser) resolveLabels(lines *[]string) {
 	offset := 0
 	for i, line := range *lines {
 		if lineIsNonFunctional(line) {
@@ -74,18 +79,10 @@ func (p *Parser) resolveJumpLineOffsets(lines *[]string, instructions *Instructi
 			continue
 		}
 
-		lineNumber := i + 1
-		if p.jumpsToResolve[lineNumber] {
-			lineToInstructionIndex[lineNumber] = lineNumber - offset
-		}
-	}
-
-	// adjust jump addresses from code line to instruction index
-	for _, in := range *instructions {
-		if isOneOf(in.command, iJumpGreaterThan, iJumpEqual, iJumpLessThan) {
-			in.params[2].data = lineToInstructionIndex[in.params[2].data]
-		} else if in.command == iJump {
-			in.params[0].data = lineToInstructionIndex[in.params[0].data]
+		tokens := strings.Split(line, " ")
+		if strings.HasSuffix(tokens[0], ":") {
+			p.labels[strings.TrimSuffix(tokens[0], ":")] = i - offset + 1
+			offset++
 		}
 	}
 }
@@ -97,13 +94,21 @@ func (p *Parser) parseInstruction(iLine string) (*Instruction, error) {
 
 	stringData := strings.Split(iLine, " ")
 
+	// check if label
+	if strings.HasSuffix(stringData[0], ":") {
+		return nil, nil
+	}
+
 	iID := iMap[strings.ToUpper(stringData[0])]
 	if iID == 0 {
 		return nil, fmt.Errorf("unknown instruction '%s'", iLine)
 	}
 
+	isJumpInstruction := iID == iJump
+	isJumpCompareInstruction := isOneOf(iID, iJumpGreaterThan, iJumpEqual, iJumpLessThan)
+
 	var params []*Param
-	for _, str := range stringData[1:] {
+	for i, str := range stringData[1:] {
 		if str == "" {
 			continue // ignore multiple whitespaces
 		}
@@ -121,23 +126,32 @@ func (p *Parser) parseInstruction(iLine string) (*Instruction, error) {
 			str = strings.TrimSuffix(str, "'")
 		}
 
+		if isJumpInstruction && i == 0 {
+			// jump instructions have a label as their first parameter
+			params = append(params, &Param{
+				isReference: false,
+				data:        p.labels[str],
+			})
+			continue
+		}
+
+		if isJumpCompareInstruction && i == 2 {
+			// jump instructions have a label as their third parameter
+			params = append(params, &Param{
+				isReference: false,
+				data:        p.labels[str],
+			})
+			continue
+		}
+
 		num, err := strconv.Atoi(str)
 		if err != nil {
 			return nil, err
 		}
-
 		params = append(params, &Param{
 			isReference: isReference,
 			data:        num,
 		})
-	}
-
-	// if instruction is a jump, we need to adjust the address for
-	// empty lines and single-line comments
-	if isOneOf(iID, iJumpGreaterThan, iJumpEqual, iJumpLessThan) {
-		p.jumpsToResolve[params[2].data] = true
-	} else if isOneOf(iID, iJump) {
-		p.jumpsToResolve[params[0].data] = true
 	}
 
 	return &Instruction{

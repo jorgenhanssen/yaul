@@ -14,16 +14,19 @@ mod 1 4 6       // the modulo of the input number and iterator value is stored i
 set '0' 7       // used as reference for modulo. If a module is 0 (which is stored here), then a number is not prime
 
 // Loop and check if the number is prime
-jeq 6 7 26      // if the input number is divisible by the current iterator value then jump to 14
-mod 1 3 6       // insert the modulo of the input number vs iterator number in 6.
-jeq 6 7 26      // if the input number is divisible by the current iterator value then jump to 14
-add 3 4 3       // increment the iterator value by the iterator increment value.
-jlt 3 5 17      // if the iterator has not reached the max iterator value, jump to start
+LOOP:
+jeq 6 7 NOTPRIME      // if the input number is divisible by the current iterator value then jump to 14
+mod 1 3 6             // insert the modulo of the input number vs iterator number in 6.
+jeq 6 7 NOTPRIME      // if the input number is divisible by the current iterator value then jump to 14
+add 3 4 3             // increment the iterator value by the iterator increment value.
+jlt 3 5 LOOP          // if the iterator has not reached the max iterator value, jump to start
 
-jmp 29 // The number is prime, jump to print
+jmp PRINT // The number is prime, jump to print
 
 // Jump here if the number is NOT prime
+NOTPRIME:
 set '0' 2
 
 // Output the result
+PRINT:
 out 2

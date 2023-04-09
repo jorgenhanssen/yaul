@@ -44,7 +44,7 @@ func main() {
 
 	compileStart := time.Now()
 
-	parser := NewParser()
+	parser := NewParser(logger)
 	program, err := parser.extractInstructions(fileData)
 	ensure(err)
 

@@ -245,7 +245,7 @@ func Sub(a, b, dest *Param) error {
 	if err != nil {
 		return err
 	}
-	logger.Silent(fmt.Sprintf("Subtract #%d ('%d') from #%d ('%d') into #%d ('%d')", regA, valueA, regB, valueB, regDest, valueA-valueB))
+	logger.Silent(fmt.Sprintf("Subtract #%d ('%d') from #%d ('%d') into #%d ('%d')", regB, valueB, regA, valueA, regDest, valueA-valueB))
 	return values.Write(regDest, valueA-valueB)
 }
 
