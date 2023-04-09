@@ -55,14 +55,14 @@ func (p *Compiler) Compile(fileData string) (Instructions, error) {
 
 	var instructions Instructions
 	for i, line := range lines {
-		instruction, err := p.parseInstruction(line)
-		if err != nil {
-			return nil, fmt.Errorf("Error at line %d: %v", i+1, err)
+		if lineIsNonFunctional(line) || lineIsLabel(line) {
+			continue
 		}
 
-		// Instruction may be nil if line is a comment or empty line
-		if instruction != nil {
+		if instruction, err := p.parseInstruction(line); err == nil {
 			instructions = append(instructions, instruction)
+		} else {
+			return nil, fmt.Errorf("Error at line %d: %v", i+1, err)
 		}
 	}
 
@@ -77,24 +77,15 @@ func (p *Compiler) resolveLabels(lines *[]string) {
 			continue
 		}
 
-		tokens := strings.Split(line, " ")
-		if tokenIsLabel(tokens[0]) {
-			p.labels[strings.TrimSuffix(tokens[0], ":")] = i - offset + 1
+		if lineIsLabel(line) {
+			p.labels[strings.Split(line, ":")[0]] = i - offset + 1
 			offset++
 		}
 	}
 }
 
 func (p *Compiler) parseInstruction(iLine string) (*Instruction, error) {
-	if lineIsNonFunctional(iLine) {
-		return nil, nil
-	}
-
 	stringData := strings.Split(iLine, " ")
-
-	if tokenIsLabel(stringData[0]) {
-		return nil, nil
-	}
 
 	iID := iMap[strings.ToUpper(stringData[0])]
 	if iID == 0 {
@@ -166,10 +157,18 @@ func isOneOf(value int, values ...int) bool {
 	return false
 }
 
-// if empty or comment (starts with //), return true
 func lineIsNonFunctional(line string) bool {
-	return strings.TrimSpace(line) == "" || strings.HasPrefix(line, "//")
+	return strings.HasPrefix(line, "//") || strings.TrimSpace(line) == ""
 }
-func tokenIsLabel(token string) bool {
-	return strings.HasSuffix(token, ":")
+
+func lineIsLabel(line string) bool {
+	for _, c := range line {
+		if c == ' ' {
+			return false
+		}
+		if c == ':' {
+			return true
+		}
+	}
+	return false
 }
