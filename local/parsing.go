@@ -11,9 +11,8 @@ import (
 )
 
 type Parser struct {
-	logger            *logging.Instance
-	instructionCursor int
-	labels            map[string]int
+	logger *logging.Instance
+	labels map[string]int
 }
 
 type Param struct {
@@ -64,7 +63,6 @@ func (p *Parser) extractInstructions(fileData string) (Instructions, error) {
 		// Instruction may be nil if line is a comment or empty line
 		if instruction != nil {
 			instructions = append(instructions, instruction)
-			p.instructionCursor++
 		}
 	}
 
