@@ -188,15 +188,16 @@ func safeReadInt(address int) (int, error) {
 
 // used to return an address or a reference
 func safeReadAddress(address *Param) (int, error) {
-	reg := address.data
-	if address.isReference {
-		var err error
-		reg, err = safeReadInt(address.data)
-		if err != nil {
-			return 0, err
-		}
+	if !address.isReference {
+		return address.data, nil
 	}
-	return reg, nil
+
+	// Read the value at the referenced address
+	if data, err := safeReadInt(address.data); err == nil {
+		return data, nil
+	} else {
+		return 0, err
+	}
 }
 
 // if empty or comment (starts with //), return true
