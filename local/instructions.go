@@ -427,3 +427,37 @@ func Jlt(a, b, address *Param) error {
 	}
 	return nil
 }
+
+func safeInterfaceToInt(value interface{}) (int, error) {
+	val, ok := value.(int)
+	if !ok {
+		return 0, fmt.Errorf("unable to cast '%v' to int", val)
+	}
+	return val, nil
+}
+
+func safeReadInt(address int) (int, error) {
+	val, err := values.Read(address)
+	if err != nil {
+		return 0, err
+	}
+	safeVal, err := safeInterfaceToInt(val)
+	if err != nil {
+		return 0, err
+	}
+	return safeVal, nil
+}
+
+// used to return an address or a reference
+func safeReadAddress(address *Param) (int, error) {
+	if !address.isReference {
+		return address.data, nil
+	}
+
+	// Read the value at the referenced address
+	if data, err := safeReadInt(address.data); err == nil {
+		return data, nil
+	} else {
+		return 0, err
+	}
+}
