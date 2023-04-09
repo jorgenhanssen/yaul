@@ -1,17 +1,30 @@
+// A program that simulate binary search
+
 set '2' 2       // REG2: binary divisor (2)
 set '0' 3       
 in 10           // REG10: user inputs array size => used as increment
 in 20           // REG20: user inputs index to find
 div 10 2 10     // REG10: current position increment
 mov 10 1        // REG1: position
-out 1           // print current number
-div 10 2 10     // divide for next
-jeq 10 3 17     // if position increment is 0 then jump to 17 to make it 1
-jgt 20 1 14     // jump to line 12 if greater than
-jeq 20 1 16     // jump to 14 if correct
-sub 1 10 1      // less than
-jmp 7           // jump back to line 6
-add 1 10 1      // more than
-jmp 7           // jump back to line 6
-term            // finish
+
+LOOP:
+div 10 2 10        // divide for next
+out 1              // print current number
+jeq 10 3 B         // if position increment is 0 then jump to 17 to make it 1
+jgt 20 1 MORE_THAN // jump to line 12 if greater than
+jeq 20 1 TERMINATE // jump to 14 if correct
+jmp LESS_THAN      // jump to line 10
+
+LESS_THAN:
+sub 1 10 1  // less than
+jmp LOOP    // jump back to line 6
+
+MORE_THAN:
+add 1 10 1  // more than
+jmp LOOP    // jump back to line 6
+
+TERMINATE:
+term        // finish
+
+B:
 set '1' 10

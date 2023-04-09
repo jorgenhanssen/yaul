@@ -44,8 +44,8 @@ func main() {
 
 	compileStart := time.Now()
 
-	parser := NewParser()
-	program, err := parser.extractInstructions(fileData)
+	compiler := NewCompiler(logger)
+	program, err := compiler.Compile(fileData)
 	ensure(err)
 
 	// Insert instructions

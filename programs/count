@@ -1,14 +1,12 @@
-// A simple program that counts from 0 to a user-inputted number
+// User inputs a number to count to (reg 0)
+in 0
 
-// Set variables
-set '0' 1   // current value (will be incremented)
-set '1' 2   // how much to increment by (1)
-
-// User inputs a number to count to (reg 3)
-in 3
+// Loop variables
+set '0' 1   // current value
+set '1' 2   // increment
 
 // Loop and print the current value
-// Until the current value is equal to the target
-add 1 2 1    // adds reg 2 to reg 1
-out 1        // print the current value
-jlt 1 3 12   // Go back to line 12 if less than user's input
+LOOP:
+add 2 1 1      // increment current value
+out 1          // print the current value
+jlt 1 0 LOOP   // if current value < target, re-loop
