@@ -78,7 +78,7 @@ func (p *Compiler) resolveLabels(lines *[]string) {
 		}
 
 		tokens := strings.Split(line, " ")
-		if strings.HasSuffix(tokens[0], ":") {
+		if tokenIsLabel(tokens[0]) {
 			p.labels[strings.TrimSuffix(tokens[0], ":")] = i - offset + 1
 			offset++
 		}
@@ -92,8 +92,7 @@ func (p *Compiler) parseInstruction(iLine string) (*Instruction, error) {
 
 	stringData := strings.Split(iLine, " ")
 
-	// check if label
-	if strings.HasSuffix(stringData[0], ":") {
+	if tokenIsLabel(stringData[0]) {
 		return nil, nil
 	}
 
@@ -203,4 +202,7 @@ func safeReadAddress(address *Param) (int, error) {
 // if empty or comment (starts with //), return true
 func lineIsNonFunctional(line string) bool {
 	return strings.TrimSpace(line) == "" || strings.HasPrefix(line, "//")
+}
+func tokenIsLabel(token string) bool {
+	return strings.HasSuffix(token, ":")
 }
