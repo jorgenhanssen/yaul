@@ -47,3 +47,10 @@ A program to check if a number is prime.
 
 - Enter a number (`N`)
 - The program will print 1 if the number is prime and 0 if not.
+
+### programs/fibonacci
+
+A program printing the first N Fibonacci numbers
+
+- Enter a number (`N`)
+- The program will print the first N Fibonacci numbers
