@@ -10,7 +10,7 @@ import (
 	"github.com/jorgenhanssen/a-machine/local/logging"
 )
 
-type Parser struct {
+type Compiler struct {
 	logger *logging.Instance
 	labels map[string]int
 }
@@ -41,14 +41,14 @@ func ReadFile(filename string) (string, error) {
 	}
 }
 
-func NewParser(logger *logging.Instance) *Parser {
-	return &Parser{
+func NewCompiler(logger *logging.Instance) *Compiler {
+	return &Compiler{
 		logger: logger,
 		labels: map[string]int{},
 	}
 }
 
-func (p *Parser) extractInstructions(fileData string) (Instructions, error) {
+func (p *Compiler) Compile(fileData string) (Instructions, error) {
 	lines := strings.Split(fileData, "\n")
 
 	p.resolveLabels(&lines)
@@ -69,7 +69,7 @@ func (p *Parser) extractInstructions(fileData string) (Instructions, error) {
 	return instructions, nil
 }
 
-func (p *Parser) resolveLabels(lines *[]string) {
+func (p *Compiler) resolveLabels(lines *[]string) {
 	offset := 0
 	for i, line := range *lines {
 		if lineIsNonFunctional(line) {
@@ -85,7 +85,7 @@ func (p *Parser) resolveLabels(lines *[]string) {
 	}
 }
 
-func (p *Parser) parseInstruction(iLine string) (*Instruction, error) {
+func (p *Compiler) parseInstruction(iLine string) (*Instruction, error) {
 	if lineIsNonFunctional(iLine) {
 		return nil, nil
 	}
