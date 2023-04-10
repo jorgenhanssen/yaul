@@ -6,6 +6,11 @@ set '8' 1
 set '3' 2
 set '7' 3
 set '1' 4
+set '12' 5
+set '9' 6
+
+// array length (must match!)
+set '7' 50
 
 // main program
 call PRINT_ARRAY
@@ -13,25 +18,15 @@ call SORT_ARRAY
 call PRINT_ARRAY
 term
 
-// Function that prints the array
-PRINT_ARRAY:
-out 0
-out 1
-out 2
-out 3
-out 4
-ret
-
 // Function that sorts the array
 SORT_ARRAY:
 set '0' 11 // loop A index
 set '1' 12 // loop A index+1
 set '0' 13 // loop B index
 set '1' 21 // loop increment
-set '5' 22 // loop max index
 
 SORT_ARRAY_LOOP:
-jeq 12 22 SORT_ARRAY_LOOP_OUTER_END
+jeq 12 50 SORT_ARRAY_LOOP_OUTER_END
 
 jgt &11 &12 SORT_ARRAY_SWAP
 jmp SORT_ARRAY_LOOP_INNER_END
@@ -47,7 +42,7 @@ add 21 12 12
 jmp SORT_ARRAY_LOOP
 
 SORT_ARRAY_LOOP_OUTER_END:
-jeq 13 22 SORT_ARRAY_EXIT
+jeq 13 50 SORT_ARRAY_EXIT
 set '0' 11 // reset inner loop index
 set '1' 12 // reset inner loop index+1
 add 21 13 13  // increment outer loop
@@ -65,4 +60,15 @@ SWAP:
 mov &100 102
 mov &101 &100
 mov 102 &101
+ret
+
+// Function that prints the array
+PRINT_ARRAY:
+set '0' 30 // loop index
+set '1' 31 // loop increment
+
+PRINT_ARRAY_LOOP:
+out &30
+add 31 30 30
+jlt 30 50 PRINT_ARRAY_LOOP
 ret
