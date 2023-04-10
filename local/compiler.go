@@ -6,6 +6,8 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"time"
+	"unicode"
 
 	"github.com/jorgenhanssen/a-machine/local/logging"
 )
@@ -26,21 +28,7 @@ type Instruction struct {
 }
 type Instructions []*Instruction
 
-func ReadFile(filename string) (string, error) {
-	file, err := os.Open(filename)
-	if err != nil {
-		return "", err
-	}
-
-	defer file.Close()
-
-	if b, err := ioutil.ReadAll(file); err != nil {
-		return "", err
-	} else {
-		return string(b), nil
-	}
-}
-
+// NewCompiler creates a new compiler instance
 func NewCompiler(logger *logging.Instance) *Compiler {
 	return &Compiler{
 		logger: logger,
@@ -48,17 +36,14 @@ func NewCompiler(logger *logging.Instance) *Compiler {
 	}
 }
 
+// Compile parses the source code and returns a list of instructions
 func (p *Compiler) Compile(fileData string) (Instructions, error) {
-	lines := strings.Split(fileData, "\n")
-
-	p.resolveLabels(&lines)
-
 	var instructions Instructions
-	for i, line := range lines {
-		if lineIsNonFunctional(line) || lineIsLabel(line) {
-			continue
-		}
 
+	compileStart := time.Now()
+
+	lines := p.resolveLines(fileData)
+	for i, line := range lines {
 		if instruction, err := p.parseInstruction(line); err == nil {
 			instructions = append(instructions, instruction)
 		} else {
@@ -66,34 +51,43 @@ func (p *Compiler) Compile(fileData string) (Instructions, error) {
 		}
 	}
 
+	compileEnd := time.Now()
+	logger.Print(fmt.Sprintf("Compiled in %v", compileEnd.Sub(compileStart)))
+
 	return instructions, nil
 }
 
-func (p *Compiler) resolveLabels(lines *[]string) {
-	offset := 0
-	for i, line := range *lines {
+// resolveLines removes comments and labels from the source code
+// and resolves labels to their corresponding instruction index
+func (p *Compiler) resolveLines(data string) []string {
+	resolved := []string{}
+
+	for _, line := range strings.Split(data, "\n") {
 		if lineIsNonFunctional(line) {
-			offset++
+			continue
+		}
+		if lineIsLabel(line) {
+			p.labels[strings.Split(line, ":")[0]] = len(resolved) + 1
 			continue
 		}
 
-		if lineIsLabel(line) {
-			p.labels[strings.Split(line, ":")[0]] = i - offset + 1
-			offset++
-		}
+		resolved = append(resolved, line)
 	}
+
+	return resolved
 }
 
-func (p *Compiler) parseInstruction(iLine string) (*Instruction, error) {
-	stringData := strings.Split(iLine, " ")
+// parseInstruction parses a single line of source code and returns an instruction
+func (p *Compiler) parseInstruction(line string) (*Instruction, error) {
+	stringData := strings.Split(line, " ")
 
 	iID := iMap[strings.ToUpper(stringData[0])]
 	if iID == 0 {
-		return nil, fmt.Errorf("unknown instruction '%s'", iLine)
+		return nil, fmt.Errorf("unknown instruction '%s'", line)
 	}
 
 	isJumpInstruction := iID == iJump
-	isJumpCompareInstruction := isOneOf(iID, iJumpGreaterThan, iJumpEqual, iJumpLessThan)
+	isJumpCompareInstruction := iID >= iJumpGreaterThan && iID <= iJumpLessThan
 
 	var params []*Param
 	for i, str := range stringData[1:] {
@@ -148,19 +142,24 @@ func (p *Compiler) parseInstruction(iLine string) (*Instruction, error) {
 	}, nil
 }
 
-func isOneOf(value int, values ...int) bool {
-	for _, v := range values {
-		if value == v {
-			return true
+// lineIsNonFunctional returns true if the line is a comment or empty
+func lineIsNonFunctional(line string) bool {
+	// Check if the line is a comment
+	if len(line) >= 2 && line[0] == '/' && line[1] == '/' {
+		return true
+	}
+
+	// Check if the line is empty
+	for _, c := range line {
+		if !unicode.IsSpace(c) {
+			return false
 		}
 	}
-	return false
+
+	return true
 }
 
-func lineIsNonFunctional(line string) bool {
-	return strings.HasPrefix(line, "//") || strings.TrimSpace(line) == ""
-}
-
+// lineIsLabel returns true if the line is a label
 func lineIsLabel(line string) bool {
 	for _, c := range line {
 		if c == ' ' {
@@ -171,4 +170,20 @@ func lineIsLabel(line string) bool {
 		}
 	}
 	return false
+}
+
+// ReadFile reads a file and returns its contents as a string
+func ReadFile(filename string) (string, error) {
+	file, err := os.Open(filename)
+	if err != nil {
+		return "", err
+	}
+
+	defer file.Close()
+
+	if b, err := ioutil.ReadAll(file); err != nil {
+		return "", err
+	} else {
+		return string(b), nil
+	}
 }

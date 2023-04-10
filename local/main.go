@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"os"
-	"time"
 
 	"github.com/jorgenhanssen/a-machine/local/logging"
 	"github.com/jorgenhanssen/a-machine/local/tape"
@@ -42,8 +41,6 @@ func main() {
 
 	logger.LoadProgram(fileData)
 
-	compileStart := time.Now()
-
 	compiler := NewCompiler(logger)
 	program, err := compiler.Compile(fileData)
 	ensure(err)
@@ -52,9 +49,6 @@ func main() {
 	for i, instruction := range program {
 		ensure(instructions.Write(i, instruction))
 	}
-
-	compileEnd := time.Now()
-	logger.Print(fmt.Sprintf("Compiled in %v", compileEnd.Sub(compileStart)))
 
 	// run program
 	for ; ; programCursor++ {
