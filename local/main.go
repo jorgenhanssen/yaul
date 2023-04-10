@@ -40,8 +40,6 @@ func main() {
 	fileData, err := ReadFile(os.Args[1])
 	ensure(err)
 
-	logger.LoadProgram(fileData)
-
 	compiler := NewCompiler(logger)
 	program, err := compiler.Compile(fileData)
 	ensure(err)

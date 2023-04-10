@@ -348,7 +348,7 @@ func Jmp(address *Param) error {
 		return err
 	}
 	jumpTo(reg)
-	logger.Silent(fmt.Sprintf("Jump to l%d", reg))
+	logger.Silent(fmt.Sprintf("Jump to l%d", reg+1))
 	return nil
 }
 func Jgt(a, b, address *Param) error {
@@ -375,7 +375,7 @@ func Jgt(a, b, address *Param) error {
 		return err
 	}
 	if valueA > valueB {
-		logger.Silent(fmt.Sprintf("Jump to l%d [#%d ('%d') > #%d ('%d')]", reg, regA, valueA, regB, valueB))
+		logger.Silent(fmt.Sprintf("Jump to l%d [#%d ('%d') > #%d ('%d')]", reg+1, regA, valueA, regB, valueB))
 		jumpTo(reg)
 	}
 	return nil
@@ -404,7 +404,7 @@ func Jeq(a, b, address *Param) error {
 		return err
 	}
 	if valueA == valueB {
-		logger.Silent(fmt.Sprintf("Jump to l%d [#%d ('%d') == #%d ('%d')]", reg, regA, valueA, regB, valueB))
+		logger.Silent(fmt.Sprintf("Jump to l%d [#%d ('%d') == #%d ('%d')]", reg+1, regA, valueA, regB, valueB))
 		jumpTo(reg)
 	}
 	return nil
@@ -433,7 +433,7 @@ func Jlt(a, b, address *Param) error {
 		return err
 	}
 	if valueA < valueB {
-		logger.Silent(fmt.Sprintf("Jump to l%d [#%d ('%d') < #%d ('%d')]", reg, regA, valueA, regB, valueB))
+		logger.Silent(fmt.Sprintf("Jump to l%d [#%d ('%d') < #%d ('%d')]", reg+1, regA, valueA, regB, valueB))
 		jumpTo(reg)
 	}
 	return nil
@@ -441,17 +441,21 @@ func Jlt(a, b, address *Param) error {
 
 func Call(address *Param) error {
 	stack = append(stack, programCursor)
+
+	logger.Silent(fmt.Sprintf("Call l%d", address.data+1))
 	jumpTo(address.data)
 	return nil
 }
 func Ret() error {
 	if len(stack) == 0 {
+		logger.Silent("Return (noop)")
 		// nil operation if ret is read without a preceeding call
 		return nil
 	}
 
 	programCursor = stack[len(stack)-1]
 	stack = stack[:len(stack)-1]
+	logger.Silent(fmt.Sprintf("Return to l%d", programCursor+2))
 	return nil
 }
 

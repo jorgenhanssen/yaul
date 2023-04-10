@@ -75,6 +75,8 @@ func (p *Compiler) resolveLines(data string) []string {
 		resolved = append(resolved, line)
 	}
 
+	p.logger.LoadProgram(strings.Join(resolved, "\n"))
+
 	return resolved
 }
 
@@ -113,9 +115,15 @@ func (p *Compiler) parseInstruction(line string) (*Instruction, error) {
 		}
 
 		if isCallInstruction || (isJumpInstruction && i == 0) || (isJumpCompareInstruction && i == 2) {
-			if err := p.addLabelParam(&params, str); err != nil {
+			instructionIndex, err := p.getLabelInstructionIndex(str)
+			if err != nil {
 				return nil, err
 			}
+			params = append(params, &Param{
+				isReference: isReference,
+				data:        instructionIndex,
+			})
+
 			continue
 		}
 
@@ -135,18 +143,13 @@ func (p *Compiler) parseInstruction(line string) (*Instruction, error) {
 	}, nil
 }
 
-func (c *Compiler) addLabelParam(params *[]*Param, label string) error {
+func (c *Compiler) getLabelInstructionIndex(label string) (int, error) {
 	instructionIndex, ok := c.labels[label]
 	if !ok {
-		return fmt.Errorf("unknown label '%s'", label)
+		return 0, fmt.Errorf("unknown label '%s'", label)
 	}
 
-	*params = append(*params, &Param{
-		isReference: false,
-		data:        instructionIndex,
-	})
-
-	return nil
+	return instructionIndex, nil
 }
 
 func (c *Compiler) lineError(err error, line string) error {
