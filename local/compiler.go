@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"io/ioutil"
+	"math"
 	"os"
 	"strconv"
 	"strings"
@@ -43,11 +44,11 @@ func (p *Compiler) Compile(fileData string) (Instructions, error) {
 	compileStart := time.Now()
 
 	lines := p.resolveLines(fileData)
-	for i, line := range lines {
+	for _, line := range lines {
 		if instruction, err := p.parseInstruction(line); err == nil {
 			instructions = append(instructions, instruction)
 		} else {
-			return nil, fmt.Errorf("Error at line %d: %v", i+1, err)
+			return nil, p.lineError(err, line)
 		}
 	}
 
@@ -81,9 +82,11 @@ func (p *Compiler) resolveLines(data string) []string {
 func (p *Compiler) parseInstruction(line string) (*Instruction, error) {
 	stringData := strings.Split(line, " ")
 
-	iID := iMap[strings.ToUpper(stringData[0])]
+	instruction := strings.ToUpper(stringData[0])
+
+	iID := iMap[instruction]
 	if iID == 0 {
-		return nil, fmt.Errorf("unknown instruction '%s'", line)
+		return nil, fmt.Errorf("unknown instruction '%s'", instruction)
 	}
 
 	isJumpInstruction := iID == iJump
@@ -108,27 +111,37 @@ func (p *Compiler) parseInstruction(line string) (*Instruction, error) {
 			str = strings.TrimSuffix(str, "'")
 		}
 
+		// jump instructions have a label as their first parameter
 		if isJumpInstruction && i == 0 {
-			// jump instructions have a label as their first parameter
+			instructionIndex, ok := p.labels[str]
+			if !ok {
+				return nil, fmt.Errorf("unknown label '%s'", str)
+			}
+
 			params = append(params, &Param{
 				isReference: false,
-				data:        p.labels[str],
+				data:        instructionIndex,
 			})
 			continue
 		}
 
+		// jump instructions have a label as their third parameter
 		if isJumpCompareInstruction && i == 2 {
-			// jump instructions have a label as their third parameter
+			instructionIndex, ok := p.labels[str]
+			if !ok {
+				return nil, fmt.Errorf("unknown label '%s'", str)
+			}
+
 			params = append(params, &Param{
 				isReference: false,
-				data:        p.labels[str],
+				data:        instructionIndex,
 			})
 			continue
 		}
 
 		num, err := strconv.Atoi(str)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("Instruction %s got non-numeric parameter[#%d] '%s' ", instruction, i+1, str)
 		}
 		params = append(params, &Param{
 			isReference: isReference,
@@ -140,6 +153,14 @@ func (p *Compiler) parseInstruction(line string) (*Instruction, error) {
 		command: iID,
 		params:  params,
 	}, nil
+}
+
+func (c *Compiler) lineError(err error, line string) error {
+	e := fmt.Sprintf("Error: %v", err)
+	l := fmt.Sprintf("Line: %s", line)
+	bars := strings.Repeat("=", int(math.Max(float64(len(e)), float64(len(l)))))
+
+	return fmt.Errorf("\n\n%s\n%s\n\n%s\n%s", bars, e, l, bars)
 }
 
 // lineIsNonFunctional returns true if the line is a comment or empty
