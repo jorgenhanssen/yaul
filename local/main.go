@@ -11,6 +11,7 @@ import (
 var (
 	programCursor int
 
+	stack        []int
 	instructions *tape.Instance
 	values       *tape.Instance
 	logger       *logging.Instance

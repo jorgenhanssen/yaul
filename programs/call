@@ -1,0 +1,23 @@
+// A program utilizing a function
+
+// main
+set '1' 0
+set '2' 1
+
+set 0 100
+call ADD_2 
+
+set 1 100
+call ADD_2 
+
+out 0
+out 1
+
+term
+
+// Function that adds 2 to the address in register 100
+ADD_2:
+set '2' 101
+add 101 &100 &100
+ret
+
