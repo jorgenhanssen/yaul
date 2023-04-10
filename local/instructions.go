@@ -29,6 +29,8 @@ const (
 	iJumpLessThan    = 13
 	iMove            = 14
 	iTerminate       = 15
+	iCall            = 16
+	iReturn          = 17
 )
 
 // iMap (instruction map) is used for mapping instructions from files
@@ -47,15 +49,16 @@ var iMap = map[string]int{
 	"JLT":  iJumpLessThan,
 	"MOV":  iMove,
 	"TERM": iTerminate,
+	"CALL": iCall,
+	"RET":  iReturn,
 }
 
 // jumpTo is a helper that ticks the program counter
 // to the correct address for when the next instruction is run.
-// we need to subtract 2 from the address:
-// 	1 - the addresses are shifted 1 down from their reference in a text file (line numbers start a 1)
-//  2 - the program counter is incremented by 1 after the jumpTo command is run (before next read)
+// we need to subtract 1 from the address:
+//  1 - the program counter is incremented by 1 after the jumpTo command is run (before next read)
 func jumpTo(reg int) {
-	programCursor = reg - 2
+	programCursor = reg - 1
 }
 
 func RunInstruction(i *Instruction) error {
@@ -116,6 +119,14 @@ func RunInstruction(i *Instruction) error {
 	case iMove:
 		{
 			return Mov(i.params[0], i.params[1])
+		}
+	case iCall:
+		{
+			return Call(i.params[0])
+		}
+	case iReturn:
+		{
+			return Ret()
 		}
 	default:
 		{
@@ -337,7 +348,7 @@ func Jmp(address *Param) error {
 		return err
 	}
 	jumpTo(reg)
-	logger.Silent(fmt.Sprintf("Jump to l%d", reg))
+	logger.Silent(fmt.Sprintf("Jump to l%d", reg+1))
 	return nil
 }
 func Jgt(a, b, address *Param) error {
@@ -364,7 +375,7 @@ func Jgt(a, b, address *Param) error {
 		return err
 	}
 	if valueA > valueB {
-		logger.Silent(fmt.Sprintf("Jump to l%d [#%d ('%d') > #%d ('%d')]", reg, regA, valueA, regB, valueB))
+		logger.Silent(fmt.Sprintf("Jump to l%d [#%d ('%d') > #%d ('%d')]", reg+1, regA, valueA, regB, valueB))
 		jumpTo(reg)
 	}
 	return nil
@@ -393,7 +404,7 @@ func Jeq(a, b, address *Param) error {
 		return err
 	}
 	if valueA == valueB {
-		logger.Silent(fmt.Sprintf("Jump to l%d [#%d ('%d') == #%d ('%d')]", reg, regA, valueA, regB, valueB))
+		logger.Silent(fmt.Sprintf("Jump to l%d [#%d ('%d') == #%d ('%d')]", reg+1, regA, valueA, regB, valueB))
 		jumpTo(reg)
 	}
 	return nil
@@ -422,9 +433,29 @@ func Jlt(a, b, address *Param) error {
 		return err
 	}
 	if valueA < valueB {
-		logger.Silent(fmt.Sprintf("Jump to l%d [#%d ('%d') < #%d ('%d')]", reg, regA, valueA, regB, valueB))
+		logger.Silent(fmt.Sprintf("Jump to l%d [#%d ('%d') < #%d ('%d')]", reg+1, regA, valueA, regB, valueB))
 		jumpTo(reg)
 	}
+	return nil
+}
+
+func Call(address *Param) error {
+	stack = append(stack, programCursor)
+
+	logger.Silent(fmt.Sprintf("Call l%d", address.data+1))
+	jumpTo(address.data)
+	return nil
+}
+func Ret() error {
+	if len(stack) == 0 {
+		logger.Silent("Return (noop)")
+		// nil operation if ret is read without a preceeding call
+		return nil
+	}
+
+	programCursor = stack[len(stack)-1]
+	stack = stack[:len(stack)-1]
+	logger.Silent(fmt.Sprintf("Return to l%d", programCursor+2))
 	return nil
 }
 

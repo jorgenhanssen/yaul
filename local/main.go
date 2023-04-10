@@ -11,6 +11,7 @@ import (
 var (
 	programCursor int
 
+	stack        []int
 	instructions *tape.Instance
 	values       *tape.Instance
 	logger       *logging.Instance
@@ -38,8 +39,6 @@ func main() {
 	// read program file and parse instructions
 	fileData, err := ReadFile(os.Args[1])
 	ensure(err)
-
-	logger.LoadProgram(fileData)
 
 	compiler := NewCompiler(logger)
 	program, err := compiler.Compile(fileData)

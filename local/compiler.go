@@ -68,12 +68,14 @@ func (p *Compiler) resolveLines(data string) []string {
 			continue
 		}
 		if lineIsLabel(line) {
-			p.labels[strings.Split(line, ":")[0]] = len(resolved) + 1
+			p.labels[strings.Split(line, ":")[0]] = len(resolved)
 			continue
 		}
 
 		resolved = append(resolved, line)
 	}
+
+	p.logger.LoadProgram(strings.Join(resolved, "\n"))
 
 	return resolved
 }
@@ -89,6 +91,7 @@ func (p *Compiler) parseInstruction(line string) (*Instruction, error) {
 		return nil, fmt.Errorf("unknown instruction '%s'", instruction)
 	}
 
+	isCallInstruction := iID == iCall
 	isJumpInstruction := iID == iJump
 	isJumpCompareInstruction := iID >= iJumpGreaterThan && iID <= iJumpLessThan
 
@@ -111,31 +114,16 @@ func (p *Compiler) parseInstruction(line string) (*Instruction, error) {
 			str = strings.TrimSuffix(str, "'")
 		}
 
-		// jump instructions have a label as their first parameter
-		if isJumpInstruction && i == 0 {
-			instructionIndex, ok := p.labels[str]
-			if !ok {
-				return nil, fmt.Errorf("unknown label '%s'", str)
+		if isCallInstruction || (isJumpInstruction && i == 0) || (isJumpCompareInstruction && i == 2) {
+			instructionIndex, err := p.getLabelInstructionIndex(str)
+			if err != nil {
+				return nil, err
 			}
-
 			params = append(params, &Param{
-				isReference: false,
+				isReference: isReference,
 				data:        instructionIndex,
 			})
-			continue
-		}
 
-		// jump instructions have a label as their third parameter
-		if isJumpCompareInstruction && i == 2 {
-			instructionIndex, ok := p.labels[str]
-			if !ok {
-				return nil, fmt.Errorf("unknown label '%s'", str)
-			}
-
-			params = append(params, &Param{
-				isReference: false,
-				data:        instructionIndex,
-			})
 			continue
 		}
 
@@ -153,6 +141,15 @@ func (p *Compiler) parseInstruction(line string) (*Instruction, error) {
 		command: iID,
 		params:  params,
 	}, nil
+}
+
+func (c *Compiler) getLabelInstructionIndex(label string) (int, error) {
+	instructionIndex, ok := c.labels[label]
+	if !ok {
+		return 0, fmt.Errorf("unknown label '%s'", label)
+	}
+
+	return instructionIndex, nil
 }
 
 func (c *Compiler) lineError(err error, line string) error {
