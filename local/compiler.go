@@ -144,19 +144,26 @@ func (p *Compiler) parseInstruction(line string) (*Instruction, error) {
 
 // lineIsNonFunctional returns true if the line is a comment or empty
 func lineIsNonFunctional(line string) bool {
-	// Check if the line is a comment
-	if len(line) >= 2 && line[0] == '/' && line[1] == '/' {
+	if line == "" {
 		return true
 	}
 
-	// Check if the line is empty
-	for _, c := range line {
-		if !unicode.IsSpace(c) {
-			return false
+	for i, char := range line {
+		if !unicode.IsSpace(char) {
+			if i == len(line)-1 {
+				return true // End of line, ergo empty
+			}
+
+			// Not empty, let's check if it's a comment
+			if char == '/' && line[i+1] == '/' {
+				return true
+			}
+
+			break
 		}
 	}
 
-	return true
+	return false
 }
 
 // lineIsLabel returns true if the line is a label
