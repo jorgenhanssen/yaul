@@ -17,12 +17,13 @@ var (
 	logger       *logging.Instance
 )
 
-const maxInstructions = 256
-const maxHeapSize = 256
+const maxInstructions = 512
+const maxHeapSize = 512
 
 func main() {
 	logger = logging.New()
-	defer logger.ToFile()
+
+	// defer logger.ToFile()
 
 	instructions = tape.New(maxInstructions)
 	values = tape.New(maxHeapSize)

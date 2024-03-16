@@ -7,6 +7,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"time"
 )
 
 var (
@@ -31,6 +32,7 @@ const (
 	iTerminate       = 15
 	iCall            = 16
 	iReturn          = 17
+	iTime            = 18
 )
 
 // iMap (instruction map) is used for mapping instructions from files
@@ -51,12 +53,14 @@ var iMap = map[string]int{
 	"TERM": iTerminate,
 	"CALL": iCall,
 	"RET":  iReturn,
+	"TIME": iTime,
 }
 
 // jumpTo is a helper that ticks the program counter
 // to the correct address for when the next instruction is run.
 // we need to subtract 1 from the address:
-//  1 - the program counter is incremented by 1 after the jumpTo command is run (before next read)
+//
+//	1 - the program counter is incremented by 1 after the jumpTo command is run (before next read)
 func jumpTo(reg int) {
 	programCursor = reg - 1
 }
@@ -127,6 +131,10 @@ func RunInstruction(i *Instruction) error {
 	case iReturn:
 		{
 			return Ret()
+		}
+	case iTime:
+		{
+			return Time(i.params[0])
 		}
 	default:
 		{
@@ -457,6 +465,19 @@ func Ret() error {
 	stack = stack[:len(stack)-1]
 	logger.Silent(fmt.Sprintf("Return to l%d", programCursor+2))
 	return nil
+}
+
+func Time(address *Param) error {
+	// get time in ms
+	t := time.Now().UnixNano()
+
+	reg, err := safeReadAddress(address)
+	if err != nil {
+		return err
+	}
+
+	logger.Silent(fmt.Sprintf("Time %d into into #%d", t, reg))
+	return values.Write(reg, int(t))
 }
 
 func safeInterfaceToInt(value interface{}) (int, error) {
