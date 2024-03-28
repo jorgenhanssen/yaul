@@ -3,10 +3,8 @@
 
 in 0
 
-jgt 0 '0' CONTINUE
-term // less than 0
+jlt 0 '0' DONE // cant do negative numbers
 
-CONTINUE:
 set '1' 1 // guess
 
 LOOP:
