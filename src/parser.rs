@@ -9,7 +9,7 @@ use crate::instructions::{Instruction, Label, Param};
 
 pub struct Parser {
     pub file: PathBuf,
-    pub labels: HashMap<String, i32>,
+    pub labels: HashMap<String, u64>,
 }
 
 impl Parser {
@@ -53,7 +53,7 @@ impl Parser {
             }
             if self.line_is_label(&line) {
                 let label = line.split(":").collect::<Vec<&str>>()[0];
-                let instruction_id = instructions.len() as i32;
+                let instruction_id = instructions.len() as u64;
                 self.labels.insert(label.to_string(), instruction_id);
                 continue;
             }
@@ -216,20 +216,20 @@ impl Parser {
         // Is value
         if chunk.starts_with("'") && chunk.ends_with("'") {
             let text = chunk[1..chunk.len() - 1].to_string();
-            let value = text.parse::<u32>().unwrap();
+            let value = text.parse::<i64>().unwrap();
             return Ok(Param::Data(value));
         }
 
         // Is reference
         if chunk.starts_with("&") {
             let text = chunk[1..].to_string();
-            let value = text.parse::<i32>().unwrap();
+            let value = text.parse::<u64>().unwrap();
             return Ok(Param::Reference(value));
         }
 
         // Should be an address
         let text = chunk.to_string();
-        let value = text.parse::<i32>().unwrap();
+        let value = text.parse::<u64>().unwrap();
         Ok(Param::Address(value))
     }
 
@@ -254,7 +254,7 @@ impl Parser {
         }
 
         if let Some(address) = self.labels.get(chunk) {
-            Ok(Label::Instruction(*address as i32))
+            Ok(Label::Instruction(*address as u64))
         } else {
             Ok(Label::Label(chunk.to_string()))
         }
@@ -318,7 +318,7 @@ impl ParseError {
 }
 impl fmt::Display for ParseError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        if (self.line.is_some()) {
+        if self.line.is_some() {
             write!(
                 f,
                 "{}\nLine: {}\nContents: {}",

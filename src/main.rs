@@ -1,6 +1,7 @@
 mod cli;
 mod instructions;
 mod parser;
+mod runner;
 
 use clap::Parser;
 use cli::CLI;
@@ -20,7 +21,12 @@ fn main() {
     let compile_time = compile_start_time.elapsed();
     println!("Compiled in {}μs", compile_time.as_micros());
 
-    for instruction in instructions {
+    for instruction in &instructions {
         println!("{:?}", &instruction);
     }
+
+    let mut runner = runner::Runner::new(instructions);
+    runner.run();
+
+    println!("Done");
 }

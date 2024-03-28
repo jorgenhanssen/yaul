@@ -1,14 +1,14 @@
 #[derive(Debug)]
 pub enum Label {
     Label(String),
-    Instruction(i32),
+    Instruction(u64),
 }
 
 #[derive(Debug)]
 pub enum Param {
-    Address(i32),
-    Reference(i32),
-    Data(u32),
+    Address(u64),
+    Reference(u64),
+    Data(i64),
 }
 
 #[derive(Debug)]
