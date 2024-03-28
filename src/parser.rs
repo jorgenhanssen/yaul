@@ -8,8 +8,8 @@ use std::path::PathBuf;
 use crate::instructions::{Instruction, Label, Param};
 
 pub struct Parser {
-    pub file: PathBuf,
-    pub labels: HashMap<String, usize>,
+    file: PathBuf,
+    labels: HashMap<String, usize>,
 }
 
 impl Parser {
@@ -64,73 +64,7 @@ impl Parser {
             }
         }
 
-        // Resolve unresolved labels
-        // TODO: Only loop over unresolved labels, and refactor
-        for instruction in instructions.iter_mut() {
-            match instruction {
-                Instruction::Jump(label) => {
-                    if let Label::Label(label_name) = label {
-                        if let Some(label_id) = self.labels.get(label_name) {
-                            *label = Label::Instruction(*label_id);
-                        } else {
-                            return Err(ParseError::new(
-                                &format!("Unresolved label: {}", label_name),
-                                None,
-                            ));
-                        }
-                    }
-                }
-                Instruction::JumpGreaterThan(_, _, label) => {
-                    if let Label::Label(label_name) = label {
-                        if let Some(label_id) = self.labels.get(label_name) {
-                            *label = Label::Instruction(*label_id);
-                        } else {
-                            return Err(ParseError::new(
-                                &format!("Unresolved label: {}", label_name),
-                                None,
-                            ));
-                        }
-                    }
-                }
-                Instruction::JumpEqual(_, _, label) => {
-                    if let Label::Label(label_name) = label {
-                        if let Some(label_id) = self.labels.get(label_name) {
-                            *label = Label::Instruction(*label_id);
-                        } else {
-                            return Err(ParseError::new(
-                                &format!("Unresolved label: {}", label_name),
-                                None,
-                            ));
-                        }
-                    }
-                }
-                Instruction::JumpLessThan(_, _, label) => {
-                    if let Label::Label(label_name) = label {
-                        if let Some(label_id) = self.labels.get(label_name) {
-                            *label = Label::Instruction(*label_id);
-                        } else {
-                            return Err(ParseError::new(
-                                &format!("Unresolved label: {}", label_name),
-                                None,
-                            ));
-                        }
-                    }
-                }
-                Instruction::Call(label) => {
-                    if let Label::Label(label_name) = label {
-                        if let Some(label_id) = self.labels.get(label_name) {
-                            *label = Label::Instruction(*label_id);
-                        } else {
-                            return Err(ParseError::new(
-                                &format!("Unresolved label: {}", label_name),
-                                None,
-                            ));
-                        }
-                    }
-                }
-                _ => {}
-            }
-        }
+        self.resolve_labels(&mut instructions)?;
 
         return Ok(instructions);
     }
@@ -258,6 +192,34 @@ impl Parser {
         } else {
             Ok(Label::Label(chunk.to_string()))
         }
+    }
+
+    fn resolve_labels(&mut self, instructions: &mut Vec<Instruction>) -> Result<(), ParseError> {
+        // Resolve unresolved labels
+        // TODO: Only loop over unresolved labels, and refactor
+        for instruction in instructions.iter_mut() {
+            match instruction {
+                Instruction::Jump(label)
+                | Instruction::JumpGreaterThan(_, _, label)
+                | Instruction::JumpEqual(_, _, label)
+                | Instruction::JumpLessThan(_, _, label)
+                | Instruction::Call(label) => {
+                    if let Label::Label(label_name) = label {
+                        if let Some(label_id) = self.labels.get(label_name) {
+                            *label = Label::Instruction(*label_id);
+                        } else {
+                            return Err(ParseError::new(
+                                &format!("Unresolved label: {}", label_name),
+                                None,
+                            ));
+                        }
+                    }
+                }
+                _ => {}
+            }
+        }
+
+        Ok(())
     }
 
     fn line_is_non_functional(&self, line: &str) -> bool {
