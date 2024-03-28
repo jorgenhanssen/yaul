@@ -1,13 +1,13 @@
 #[derive(Debug)]
 pub enum Label {
     Label(String),
-    Instruction(u64),
+    Instruction(usize),
 }
 
 #[derive(Debug)]
 pub enum Param {
-    Address(u64),
-    Reference(u64),
+    Address(usize),
+    Reference(usize),
     Data(i64),
 }
 

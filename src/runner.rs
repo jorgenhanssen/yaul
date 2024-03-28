@@ -3,7 +3,7 @@ use crate::instructions::{Instruction, Label};
 pub struct Runner {
     instructions: Vec<Instruction>,
     registers: [i64; 4096],
-    stack: Vec<u64>,
+    stack: Vec<usize>,
 }
 
 impl Runner {
@@ -17,9 +17,10 @@ impl Runner {
 
     pub fn run(&mut self) {
         let mut pc = 0;
+        let max_pc = self.instructions.len();
 
         loop {
-            if pc >= self.instructions.len() {
+            if pc >= max_pc {
                 break;
             }
 
@@ -30,7 +31,7 @@ impl Runner {
                     let _value = self.read_value(value);
                     let _destination = self.read_address(destination);
 
-                    self.registers[_destination as usize] = _value;
+                    self.registers[_destination] = _value;
                 }
                 Instruction::Input(destination) => {
                     let _destination = self.read_address(destination);
@@ -39,7 +40,7 @@ impl Runner {
                     std::io::stdin().read_line(&mut input).unwrap();
                     let input = input.trim().parse::<i64>().unwrap();
 
-                    self.registers[_destination as usize] = input;
+                    self.registers[_destination] = input;
                 }
                 Instruction::Output(value) => {
                     let _value = self.read_value(value);
@@ -51,35 +52,35 @@ impl Runner {
                     let _addend2 = self.read_value(addend2);
                     let _destination = self.read_address(destination);
 
-                    self.registers[_destination as usize] = _addend1 + _addend2;
+                    self.registers[_destination] = _addend1 + _addend2;
                 }
                 Instruction::Subtract(minuend, subtrahend, destination) => {
                     let _minuend = self.read_value(minuend);
                     let _subtrahend = self.read_value(subtrahend);
                     let _destination = self.read_address(destination);
 
-                    self.registers[_destination as usize] = _minuend - _subtrahend;
+                    self.registers[_destination] = _minuend - _subtrahend;
                 }
                 Instruction::Multiply(factor1, factor2, destination) => {
                     let _factor1 = self.read_value(factor1);
                     let _factor2 = self.read_value(factor2);
                     let _destination = self.read_address(destination);
 
-                    self.registers[_destination as usize] = _factor1 * _factor2;
+                    self.registers[_destination] = _factor1 * _factor2;
                 }
                 Instruction::Divide(dividend, divisor, destination) => {
                     let _dividend = self.read_value(dividend);
                     let _divisor = self.read_value(divisor);
                     let _destination = self.read_address(destination);
 
-                    self.registers[_destination as usize] = _dividend / _divisor;
+                    self.registers[_destination] = _dividend / _divisor;
                 }
                 Instruction::Modulo(dividend, divisor, destination) => {
                     let _dividend = self.read_value(dividend);
                     let _divisor = self.read_value(divisor);
                     let _destination = self.read_address(destination);
 
-                    self.registers[_destination as usize] = _dividend % _divisor;
+                    self.registers[_destination] = _dividend % _divisor;
                 }
                 Instruction::Jump(label) => {
                     let _label = match label {
@@ -87,7 +88,7 @@ impl Runner {
                         Label::Instruction(value) => *value,
                     };
 
-                    pc = _label as usize;
+                    pc = _label;
                     continue;
                 }
                 Instruction::JumpGreaterThan(a, b, label) => {
@@ -99,7 +100,7 @@ impl Runner {
                     };
 
                     if _a > _b {
-                        pc = _label as usize;
+                        pc = _label;
                         continue;
                     }
                 }
@@ -112,7 +113,7 @@ impl Runner {
                     };
 
                     if _a == _b {
-                        pc = _label as usize;
+                        pc = _label;
                         continue;
                     }
                 }
@@ -125,7 +126,7 @@ impl Runner {
                     };
 
                     if _a < _b {
-                        pc = _label as usize;
+                        pc = _label;
                         continue;
                     }
                 }
@@ -133,7 +134,7 @@ impl Runner {
                     let _source = self.read_value(source);
                     let _destination = self.read_address(destination);
 
-                    self.registers[_destination as usize] = _source;
+                    self.registers[_destination] = _source;
                 }
                 Instruction::Call(label) => {
                     let _label = match label {
@@ -141,12 +142,12 @@ impl Runner {
                         Label::Instruction(value) => *value,
                     };
 
-                    self.stack.push(pc as u64 + 1);
-                    pc = _label as usize;
+                    self.stack.push(pc + 1);
+                    pc = _label;
                     continue;
                 }
                 Instruction::Return => {
-                    pc = self.stack.pop().unwrap() as usize;
+                    pc = self.stack.pop().unwrap();
                     continue;
                 }
                 Instruction::Time(destination) => {
@@ -157,7 +158,7 @@ impl Runner {
                         .unwrap()
                         .as_nanos();
 
-                    self.registers[_destination as usize] = time as i64;
+                    self.registers[_destination] = time as i64;
                 }
                 Instruction::Terminate => return,
             }
@@ -169,18 +170,18 @@ impl Runner {
     fn read_value(&self, param: &crate::instructions::Param) -> i64 {
         match param {
             crate::instructions::Param::Data(value) => *value,
-            crate::instructions::Param::Address(value) => self.registers[*value as usize],
+            crate::instructions::Param::Address(value) => self.registers[*value],
             crate::instructions::Param::Reference(value) => {
-                let referenced_reg = self.registers[*value as usize];
+                let referenced_reg = self.registers[*value];
                 self.registers[referenced_reg as usize]
             }
         }
     }
 
-    fn read_address(&self, param: &crate::instructions::Param) -> u64 {
+    fn read_address(&self, param: &crate::instructions::Param) -> usize {
         match param {
             crate::instructions::Param::Address(value) => *value,
-            crate::instructions::Param::Reference(value) => self.registers[*value as usize] as u64,
+            crate::instructions::Param::Reference(value) => self.registers[*value] as usize,
             _ => panic!("Invalid address"),
         }
     }

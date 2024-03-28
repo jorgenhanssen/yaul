@@ -19,7 +19,7 @@ fn main() {
     };
 
     let compile_time = compile_start_time.elapsed();
-    println!("Compiled in {}μs", compile_time.as_micros());
+    println!("Compiled in {:?}", compile_time);
 
     let mut runner = runner::Runner::new(instructions);
     runner.run();

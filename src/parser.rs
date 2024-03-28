@@ -9,7 +9,7 @@ use crate::instructions::{Instruction, Label, Param};
 
 pub struct Parser {
     pub file: PathBuf,
-    pub labels: HashMap<String, u64>,
+    pub labels: HashMap<String, usize>,
 }
 
 impl Parser {
@@ -53,7 +53,7 @@ impl Parser {
             }
             if self.line_is_label(&line) {
                 let label = line.split(":").collect::<Vec<&str>>()[0];
-                let instruction_id = instructions.len() as u64;
+                let instruction_id = instructions.len();
                 self.labels.insert(label.to_string(), instruction_id);
                 continue;
             }
@@ -223,13 +223,13 @@ impl Parser {
         // Is reference
         if chunk.starts_with("&") {
             let text = chunk[1..].to_string();
-            let value = text.parse::<u64>().unwrap();
+            let value = text.parse::<usize>().unwrap();
             return Ok(Param::Reference(value));
         }
 
         // Should be an address
         let text = chunk.to_string();
-        let value = text.parse::<u64>().unwrap();
+        let value = text.parse::<usize>().unwrap();
         Ok(Param::Address(value))
     }
 
@@ -254,7 +254,7 @@ impl Parser {
         }
 
         if let Some(address) = self.labels.get(chunk) {
-            Ok(Label::Instruction(*address as u64))
+            Ok(Label::Instruction(*address))
         } else {
             Ok(Label::Label(chunk.to_string()))
         }
