@@ -1,7 +1,7 @@
 // A program that simulate binary search
 
 set '2' 2       // REG2: binary divisor (2)
-set '0' 3       
+set '0' 3
 in 10           // REG10: user inputs array size => used as increment
 in 20           // REG20: user inputs index to find
 div 10 2 10     // REG10: current position increment
