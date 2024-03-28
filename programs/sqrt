@@ -1,0 +1,32 @@
+// Calculates the square root of a number using the Babylonian method.
+// Known to not work with 3 and 8.
+
+in 0
+
+jgt 0 '0' CONTINUE
+term // less than 0
+
+CONTINUE:
+set '1' 1 // guess
+
+LOOP:
+div 0 1 2 // 2: (number / guess)
+add 1 2 3 // 3: (guess + number / guess)
+div 3 '2' 4 // 4: (guess + number / guess) / 2 => next guess
+
+sub 1 4 5 // ( 5: number - next guess )
+call ABS // 5: abs(number - next guess)
+jlt 5 '2' DONE // if (number - next guess) < 2, then done
+set 4 1 // next guess becomes current guess
+jmp LOOP
+
+ABS:
+jlt 5 '0' ABSINVERT
+ret
+
+ABSINVERT:
+mul 5 '-1' 5
+ret
+
+DONE:
+out 4
