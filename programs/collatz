@@ -1,0 +1,25 @@
+// The collatz conjecture asks whether repeating two simple arithmetic
+// operations will eventually transform every positive integer into 1.
+// if n is even, divide by 2
+// if n is odd, multiply by 3 and add 1
+
+time 0
+
+LOOP:
+out 0
+mod 0 '2' 1
+jeq 0 '1' DONE
+jeq 1 '0' EVEN
+jeq 1 '1' ODD
+
+ODD:
+mul 0 '3' 0
+add 0 '1' 0
+jmp LOOP
+
+EVEN:
+div 0 '2' 0
+jmp LOOP
+
+DONE:
+term
