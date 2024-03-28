@@ -8,15 +8,15 @@ This repository is nothing more than me messing around. Don't take it seriously,
 
 ## Set up
 
-You will have to have [go installed](https://golang.org/doc/install).
+You will have to have [Rust installed](https://www.rust-lang.org/tools/install).
 
-## How to use
+## Syntax
 
 Maybe - a beautiful day - I will write how to use the language. For now look at the existing programs.
 
 ## Running existing programs
 
-`make file=<path_to_program>`
+`cargo run <path_to_program>`
 
 ### programs/array
 
@@ -57,4 +57,4 @@ A program printing the first N Fibonacci numbers
 
 ### programs/call
 
-A program that highlights how labels can be called with return 
+A program that highlights how labels can be called with return
