@@ -2,7 +2,7 @@
 mod syscall;
 pub use syscall::syscall;
 
-// Support for macos aarch64
+// Support for aarch64
 #[cfg(target_arch = "aarch64")]
 mod aarch64;
 #[cfg(target_arch = "aarch64")]
