@@ -6,10 +6,14 @@
 // This is a syscall example for Mac x86_64
 // ref: https://opensource.apple.com/source/xnu/xnu-1504.3.12/bsd/kern/syscalls.master
 
-
 // Get PID into register 0
 sys 0 '20'
 out 0
 
-// Exit with code 42
-sys 0 '1' '42'
+// Modulo the PID by 10
+mod 0 '10' 0
+
+// Exit with the result as the exit code
+sys 0 '1' 0
+
+// Run 'echo $?' to see the exit code after running this program
