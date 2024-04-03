@@ -64,7 +64,6 @@ pub enum Instruction {
     // destination
     Time(Param),
 
-    // https://syscalls64.paolostivanin.com/
     Syscall(
         Param,         // return destination
         Param,         // syscall number
