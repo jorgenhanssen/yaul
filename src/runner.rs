@@ -1,4 +1,5 @@
 use crate::instructions::{Instruction, Label};
+use crate::syscall::syscall;
 
 pub struct Runner {
     instructions: Vec<Instruction>,
@@ -160,10 +161,48 @@ impl Runner {
 
                     self.registers[_destination] = time as i64;
                 }
+                Instruction::Syscall(destination, sysno, a1, a2, a3, a4, a5, a6) => {
+                    let _destination = self.read_address(destination);
+                    let _sysno = self.read_value(sysno);
+
+                    let _a1 = self.read_optional_value(a1);
+                    let _a2 = self.read_optional_value(a2);
+                    let _a3 = self.read_optional_value(a3);
+                    let _a4 = self.read_optional_value(a4);
+                    let _a5 = self.read_optional_value(a5);
+                    let _a6 = self.read_optional_value(a6);
+
+                    let ret = unsafe {
+                        syscall(
+                            _sysno as usize,
+                            optional_int_to_usize(_a1),
+                            optional_int_to_usize(_a2),
+                            optional_int_to_usize(_a3),
+                            optional_int_to_usize(_a4),
+                            optional_int_to_usize(_a5),
+                            optional_int_to_usize(_a6),
+                        )
+                    };
+
+                    // https://git.musl-libc.org/cgit/musl/tree/src/internal/syscall_ret.c?h=v1.1.15
+                    if ret > -4096isize as usize {
+                        let errno = -(ret as i32);
+                        panic!("syscall failed: {}", errno)
+                    } else {
+                        self.registers[_destination as usize] = ret as i64;
+                    }
+                }
                 Instruction::Terminate => return,
             }
 
             pc += 1;
+        }
+    }
+
+    fn read_optional_value(&self, param: &Option<crate::instructions::Param>) -> Option<i64> {
+        match param {
+            Some(value) => Some(self.read_value(value)),
+            None => None,
         }
     }
 
@@ -184,5 +223,12 @@ impl Runner {
             crate::instructions::Param::Reference(value) => self.registers[*value] as usize,
             _ => panic!("Invalid address"),
         }
+    }
+}
+
+fn optional_int_to_usize(value: Option<i64>) -> Option<usize> {
+    match value {
+        Some(value) => Some(value as usize),
+        None => None,
     }
 }
