@@ -2,6 +2,7 @@ mod cli;
 mod instructions;
 mod parser;
 mod runner;
+mod syscall;
 
 use clap::Parser;
 use cli::CLI;

@@ -131,6 +131,16 @@ impl Parser {
             "CALL" => Instruction::Call(self.parse_label(chunks[1])?),
             "RET" => Instruction::Return,
             "TIME" => Instruction::Time(self.parse_param(chunks[1])?),
+            "SYS" => Instruction::Syscall(
+                self.parse_param(chunks[1])?,
+                self.parse_param(chunks[2])?,
+                self.parse_optional_param(chunks.get(3))?,
+                self.parse_optional_param(chunks.get(4))?,
+                self.parse_optional_param(chunks.get(5))?,
+                self.parse_optional_param(chunks.get(6))?,
+                self.parse_optional_param(chunks.get(7))?,
+                self.parse_optional_param(chunks.get(8))?,
+            ),
             _ => {
                 return Err(ParseError::new(
                     &format!("Unknown instruction: {}", instruction_id),
@@ -140,6 +150,20 @@ impl Parser {
         };
 
         Ok(i)
+    }
+
+    fn parse_optional_param(&self, chunk: Option<&&str>) -> Result<Option<Param>, ParseError> {
+        match chunk {
+            None => Ok(None),
+            Some(chunk) => {
+                if *chunk == "_" {
+                    return Ok(None);
+                }
+
+                let param = self.parse_param(chunk)?;
+                Ok(Some(param))
+            }
+        }
     }
 
     fn parse_param(&self, chunk: &str) -> Result<Param, ParseError> {
