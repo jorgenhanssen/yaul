@@ -5,7 +5,7 @@ use std::fs::File;
 use std::io::{BufRead, BufReader};
 use std::path::PathBuf;
 
-use crate::instructions::{Instruction, Label, Param};
+use crate::instructions::{Destination, Instruction, Label, Source};
 
 pub struct Parser {
     file: PathBuf,
@@ -82,64 +82,70 @@ impl Parser {
 
         // Use a match expression for direct mapping
         let i = match instruction_id.as_str() {
-            "SET" => Instruction::Set(self.parse_param(chunks[1])?, self.parse_param(chunks[2])?),
-            "IN" => Instruction::Input(self.parse_param(chunks[1])?),
-            "OUT" => Instruction::Output(self.parse_param(chunks[1])?),
+            "SET" => Instruction::Set(
+                self.parse_source(chunks[1])?,
+                self.parse_destination(chunks[2])?,
+            ),
+            "IN" => Instruction::Input(self.parse_destination(chunks[1])?),
+            "OUT" => Instruction::Output(self.parse_source(chunks[1])?),
             "ADD" => Instruction::Add(
-                self.parse_param(chunks[1])?,
-                self.parse_param(chunks[2])?,
-                self.parse_param(chunks[3])?,
+                self.parse_source(chunks[1])?,
+                self.parse_source(chunks[2])?,
+                self.parse_destination(chunks[3])?,
             ),
             "SUB" => Instruction::Subtract(
-                self.parse_param(chunks[1])?,
-                self.parse_param(chunks[2])?,
-                self.parse_param(chunks[3])?,
+                self.parse_source(chunks[1])?,
+                self.parse_source(chunks[2])?,
+                self.parse_destination(chunks[3])?,
             ),
             "MUL" => Instruction::Multiply(
-                self.parse_param(chunks[1])?,
-                self.parse_param(chunks[2])?,
-                self.parse_param(chunks[3])?,
+                self.parse_source(chunks[1])?,
+                self.parse_source(chunks[2])?,
+                self.parse_destination(chunks[3])?,
             ),
             "DIV" => Instruction::Divide(
-                self.parse_param(chunks[1])?,
-                self.parse_param(chunks[2])?,
-                self.parse_param(chunks[3])?,
+                self.parse_source(chunks[1])?,
+                self.parse_source(chunks[2])?,
+                self.parse_destination(chunks[3])?,
             ),
             "MOD" => Instruction::Modulo(
-                self.parse_param(chunks[1])?,
-                self.parse_param(chunks[2])?,
-                self.parse_param(chunks[3])?,
+                self.parse_source(chunks[1])?,
+                self.parse_source(chunks[2])?,
+                self.parse_destination(chunks[3])?,
             ),
             "JMP" => Instruction::Jump(self.parse_label(chunks[1])?),
             "JGT" => Instruction::JumpGreaterThan(
-                self.parse_param(chunks[1])?,
-                self.parse_param(chunks[2])?,
+                self.parse_source(chunks[1])?,
+                self.parse_source(chunks[2])?,
                 self.parse_label(chunks[3])?,
             ),
             "JEQ" => Instruction::JumpEqual(
-                self.parse_param(chunks[1])?,
-                self.parse_param(chunks[2])?,
+                self.parse_source(chunks[1])?,
+                self.parse_source(chunks[2])?,
                 self.parse_label(chunks[3])?,
             ),
             "JLT" => Instruction::JumpLessThan(
-                self.parse_param(chunks[1])?,
-                self.parse_param(chunks[2])?,
+                self.parse_source(chunks[1])?,
+                self.parse_source(chunks[2])?,
                 self.parse_label(chunks[3])?,
             ),
-            "MOV" => Instruction::Move(self.parse_param(chunks[1])?, self.parse_param(chunks[2])?),
+            "MOV" => Instruction::Move(
+                self.parse_source(chunks[1])?,
+                self.parse_destination(chunks[2])?,
+            ),
             "TERM" => Instruction::Terminate,
             "CALL" => Instruction::Call(self.parse_label(chunks[1])?),
             "RET" => Instruction::Return,
-            "TIME" => Instruction::Time(self.parse_param(chunks[1])?),
+            "TIME" => Instruction::Time(self.parse_destination(chunks[1])?),
             "SYS" => Instruction::Syscall(
-                self.parse_param(chunks[1])?,
-                self.parse_param(chunks[2])?,
-                self.parse_optional_param(chunks.get(3))?,
-                self.parse_optional_param(chunks.get(4))?,
-                self.parse_optional_param(chunks.get(5))?,
-                self.parse_optional_param(chunks.get(6))?,
-                self.parse_optional_param(chunks.get(7))?,
-                self.parse_optional_param(chunks.get(8))?,
+                self.parse_destination(chunks[1])?,
+                self.parse_source(chunks[2])?,
+                self.parse_optional_source(chunks.get(3))?,
+                self.parse_optional_source(chunks.get(4))?,
+                self.parse_optional_source(chunks.get(5))?,
+                self.parse_optional_source(chunks.get(6))?,
+                self.parse_optional_source(chunks.get(7))?,
+                self.parse_optional_source(chunks.get(8))?,
             ),
             _ => {
                 return Err(ParseError::new(
@@ -152,7 +158,7 @@ impl Parser {
         Ok(i)
     }
 
-    fn parse_optional_param(&self, chunk: Option<&&str>) -> Result<Option<Param>, ParseError> {
+    fn parse_optional_source(&self, chunk: Option<&&str>) -> Result<Option<Source>, ParseError> {
         match chunk {
             None => Ok(None),
             Some(chunk) => {
@@ -160,13 +166,13 @@ impl Parser {
                     return Ok(None);
                 }
 
-                let param = self.parse_param(chunk)?;
+                let param = self.parse_source(chunk)?;
                 Ok(Some(param))
             }
         }
     }
 
-    fn parse_param(&self, chunk: &str) -> Result<Param, ParseError> {
+    fn parse_source(&self, chunk: &str) -> Result<Source, ParseError> {
         if chunk == "" {
             return Err(ParseError::new("Parameter should not be empty", None));
         }
@@ -175,20 +181,38 @@ impl Parser {
         if chunk.starts_with("'") && chunk.ends_with("'") {
             let text = chunk[1..chunk.len() - 1].to_string();
             let value = text.parse::<i64>().unwrap();
-            return Ok(Param::Data(value));
+            return Ok(Source::Data(value));
         }
 
-        // Is reference
+        // Reference
         if chunk.starts_with("&") {
             let text = chunk[1..].to_string();
             let value = text.parse::<usize>().unwrap();
-            return Ok(Param::Reference(value));
+            return Ok(Source::Reference(value));
         }
 
         // Should be an address
         let text = chunk.to_string();
         let value = text.parse::<usize>().unwrap();
-        Ok(Param::Address(value))
+        Ok(Source::Address(value))
+    }
+
+    fn parse_destination(&self, chunk: &str) -> Result<Destination, ParseError> {
+        if chunk == "" {
+            return Err(ParseError::new("Parameter should not be empty", None));
+        }
+
+        // Reference
+        if chunk.starts_with("&") {
+            let text = chunk[1..].to_string();
+            let value = text.parse::<usize>().unwrap();
+            return Ok(Destination::Reference(value));
+        }
+
+        // Should be an address
+        let text = chunk.to_string();
+        let value = text.parse::<usize>().unwrap();
+        Ok(Destination::Address(value))
     }
 
     fn parse_label(&mut self, chunk: &str) -> Result<Label, ParseError> {

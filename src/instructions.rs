@@ -1,77 +1,49 @@
 #[derive(Debug)]
-pub enum Label {
-    Label(String),
-    Instruction(usize),
+pub enum Instruction {
+    Set(Source, Destination),
+    Input(Destination),
+    Output(Source),
+    Add(Source, Source, Destination),
+    Subtract(Source, Source, Destination),
+    Multiply(Source, Source, Destination),
+    Divide(Source, Source, Destination),
+    Modulo(Source, Source, Destination),
+    Jump(Label),
+    JumpGreaterThan(Source, Source, Label),
+    JumpEqual(Source, Source, Label),
+    JumpLessThan(Source, Source, Label),
+    Move(Source, Destination),
+    Terminate,
+    Call(Label),
+    Return,
+    Time(Destination),
+    Syscall(
+        Destination,
+        Source,
+        Option<Source>,
+        Option<Source>,
+        Option<Source>,
+        Option<Source>,
+        Option<Source>,
+        Option<Source>,
+    ),
 }
 
 #[derive(Debug)]
-pub enum Param {
+pub enum Source {
     Address(usize),
     Reference(usize),
     Data(i64),
 }
 
 #[derive(Debug)]
-pub enum Instruction {
-    // value, destination
-    Set(Param, Param),
+pub enum Destination {
+    Address(usize),
+    Reference(usize),
+}
 
-    // destination
-    Input(Param),
-
-    // source
-    Output(Param),
-
-    // addend, addend, destination
-    Add(Param, Param, Param),
-
-    // minuend, subtrahend, destination
-    Subtract(Param, Param, Param),
-
-    // factor, factor, destination
-    Multiply(Param, Param, Param),
-
-    // dividend, divisor, destination
-    Divide(Param, Param, Param),
-
-    // dividend, divisor, register
-    Modulo(Param, Param, Param),
-
-    // target address
-    Jump(Label),
-
-    // A, B, destination (A > B)
-    JumpGreaterThan(Param, Param, Label),
-
-    // A, B, destination (A == B)
-    JumpEqual(Param, Param, Label),
-
-    // A, B, destination (A < B)
-    JumpLessThan(Param, Param, Label),
-
-    // source, destination
-    Move(Param, Param),
-
-    // none
-    Terminate,
-
-    // call label
-    Call(Label),
-
-    // none
-    Return,
-
-    // destination
-    Time(Param),
-
-    Syscall(
-        Param,         // return destination
-        Param,         // syscall number
-        Option<Param>, // argument 1
-        Option<Param>, // argument 2
-        Option<Param>, // argument 3
-        Option<Param>, // argument 4
-        Option<Param>, // argument 5
-        Option<Param>, // argument 6
-    ),
+#[derive(Debug)]
+pub enum Label {
+    Label(String),
+    Instruction(usize),
 }
