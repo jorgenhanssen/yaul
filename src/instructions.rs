@@ -1,5 +1,6 @@
 #[derive(Debug)]
 pub enum Instruction {
+    Return,
     Set(Source, Destination),
     Input(Destination),
     Output(Source),
@@ -12,9 +13,7 @@ pub enum Instruction {
     JumpGreaterThan(Source, Source, Label),
     JumpEqual(Source, Source, Label),
     JumpLessThan(Source, Source, Label),
-    Move(Source, Destination),
     Call(Label),
-    Return,
     Time(Destination),
     Syscall(
         Destination,

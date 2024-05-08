@@ -21,7 +21,7 @@ sub 0 6 0 // n = n - 2
 LOOP:
 add 1 2 3     // temp = prev + curr
 out 3         // print temp
-mov 2 1       // prev = curr
-mov 3 2       // curr = temp
+set 2 1       // prev = curr
+set 3 2       // curr = temp
 add 5 4 4     // increment loop counter
 jlt 4 0 LOOP  // if loop counter < n, re-loop

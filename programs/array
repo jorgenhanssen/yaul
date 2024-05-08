@@ -1,6 +1,6 @@
 set '0' 1       // REG1: index value
 set '100' 2     // REG2: offset value (to avoid overwriting registers)
-mov 2 3         // REG3: incremented/mutating offset value
+set 2 3         // REG3: incremented/mutating offset value
 set '1' 4       // REG4: iterator increment value
 in 5            // REG5: user inputs array length
 
