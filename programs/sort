@@ -19,7 +19,7 @@ set '10' 50
 call PRINT_ARRAY
 call SORT_ARRAY
 call PRINT_ARRAY
-term
+ret
 
 // Function that sorts the array
 SORT_ARRAY:
