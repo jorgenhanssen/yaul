@@ -28,6 +28,15 @@ impl Runner {
             let instruction = &self.instructions[pc];
 
             match instruction {
+                Instruction::Return => {
+                    if self.stack.is_empty() {
+                        // Returning from main works as program exit.
+                        return;
+                    }
+
+                    pc = self.stack.pop().unwrap();
+                    continue;
+                }
                 Instruction::Set(value, destination) => {
                     let _value = self.read_source(value);
                     let _destination = self.read_destination(destination);
@@ -131,12 +140,6 @@ impl Runner {
                         continue;
                     }
                 }
-                Instruction::Move(source, destination) => {
-                    let _source = self.read_source(source);
-                    let _destination = self.read_destination(destination);
-
-                    self.registers[_destination] = _source;
-                }
                 Instruction::Call(label) => {
                     let _label = match label {
                         Label::Label(_) => panic!("Invalid label"),
@@ -145,15 +148,6 @@ impl Runner {
 
                     self.stack.push(pc + 1);
                     pc = _label;
-                    continue;
-                }
-                Instruction::Return => {
-                    if self.stack.is_empty() {
-                        // Returning from main works as program exit.
-                        return;
-                    }
-
-                    pc = self.stack.pop().unwrap();
                     continue;
                 }
                 Instruction::Time(destination) => {

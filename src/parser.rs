@@ -82,6 +82,7 @@ impl Parser {
 
         // Use a match expression for direct mapping
         let i = match instruction_id.as_str() {
+            "RET" => Instruction::Return,
             "SET" => Instruction::Set(
                 self.parse_source(chunks[1])?,
                 self.parse_destination(chunks[2])?,
@@ -129,12 +130,7 @@ impl Parser {
                 self.parse_source(chunks[2])?,
                 self.parse_label(chunks[3])?,
             ),
-            "MOV" => Instruction::Move(
-                self.parse_source(chunks[1])?,
-                self.parse_destination(chunks[2])?,
-            ),
             "CALL" => Instruction::Call(self.parse_label(chunks[1])?),
-            "RET" => Instruction::Return,
             "TIME" => Instruction::Time(self.parse_destination(chunks[1])?),
             "SYS" => Instruction::Syscall(
                 self.parse_destination(chunks[1])?,

@@ -35,8 +35,8 @@ jgt &11 &12 SORT_ARRAY_SWAP
 jmp SORT_ARRAY_LOOP_INNER_END
 
 SORT_ARRAY_SWAP:
-mov 11 100
-mov 12 101
+set 11 100
+set 12 101
 call SWAP
 
 SORT_ARRAY_LOOP_INNER_END:
@@ -60,9 +60,9 @@ ret
 // - 101: second variable to swap
 // - 102: internal use
 SWAP:
-mov &100 102
-mov &101 &100
-mov 102 &101
+set &100 102
+set &101 &100
+set 102 &101
 ret
 
 // Function that prints the array
