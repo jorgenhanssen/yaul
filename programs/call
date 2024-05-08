@@ -16,7 +16,7 @@ out 0
 out 1
 
 // End the program
-term
+ret
 
 // A function that squares the value at the address in register 100
 SQUARE:

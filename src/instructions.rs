@@ -13,7 +13,6 @@ pub enum Instruction {
     JumpEqual(Source, Source, Label),
     JumpLessThan(Source, Source, Label),
     Move(Source, Destination),
-    Terminate,
     Call(Label),
     Return,
     Time(Destination),
