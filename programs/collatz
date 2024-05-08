@@ -22,4 +22,4 @@ div 0 '2' 0
 jmp LOOP
 
 DONE:
-term
+ret

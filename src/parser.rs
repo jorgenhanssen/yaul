@@ -133,7 +133,6 @@ impl Parser {
                 self.parse_source(chunks[1])?,
                 self.parse_destination(chunks[2])?,
             ),
-            "TERM" => Instruction::Terminate,
             "CALL" => Instruction::Call(self.parse_label(chunks[1])?),
             "RET" => Instruction::Return,
             "TIME" => Instruction::Time(self.parse_destination(chunks[1])?),

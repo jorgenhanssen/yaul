@@ -148,6 +148,11 @@ impl Runner {
                     continue;
                 }
                 Instruction::Return => {
+                    if self.stack.is_empty() {
+                        // Returning from main works as program exit.
+                        return;
+                    }
+
                     pc = self.stack.pop().unwrap();
                     continue;
                 }
@@ -192,7 +197,6 @@ impl Runner {
                         self.registers[_destination as usize] = ret as i64;
                     }
                 }
-                Instruction::Terminate => return,
             }
 
             pc += 1;
