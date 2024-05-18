@@ -1,6 +1,8 @@
 use crate::instructions::{Instruction, Label};
 use crate::syscall::syscall;
 
+use std::io::{self, Read};
+
 pub struct Runner {
     instructions: Vec<Instruction>,
     registers: [i64; 4096],
@@ -44,18 +46,40 @@ impl Runner {
                     self.registers[_destination] = _value;
                 }
                 Instruction::Input(destination) => {
-                    let _destination = self.read_destination(destination);
-
                     let mut input = String::new();
                     std::io::stdin().read_line(&mut input).unwrap();
                     let input = input.trim().parse::<i64>().unwrap();
 
+                    let _destination = self.read_destination(destination);
                     self.registers[_destination] = input;
+                }
+                Instruction::CharInput(destination, size) => {
+                    let _size = self.read_source(size);
+                    if _size < 0 {
+                        panic!("Cin size must be positive");
+                    }
+
+                    let stdin = io::stdin();
+                    let mut buffer = vec![0; _size as usize];
+                    let bytes_read = stdin.lock().read(&mut buffer).unwrap();
+
+                    buffer.truncate(bytes_read); // In case less than x bytes were read
+                    let result = String::from_utf8(buffer).expect("Found invalid UTF-8");
+
+                    let _destination = self.read_destination(destination);
+                    for (i, c) in result.chars().enumerate() {
+                        self.registers[_destination + i] = c as i64;
+                    }
                 }
                 Instruction::Output(value) => {
                     let _value = self.read_source(value);
 
                     println!("{}", _value);
+                }
+                Instruction::CharOutput(value) => {
+                    let _value = self.read_source(value);
+
+                    print!("{}", _value as u8 as char);
                 }
                 Instruction::Add(addend1, addend2, destination) => {
                     let _addend1 = self.read_source(addend1);
