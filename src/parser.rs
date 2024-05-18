@@ -88,7 +88,12 @@ impl Parser {
                 self.parse_destination(chunks[2])?,
             ),
             "IN" => Instruction::Input(self.parse_destination(chunks[1])?),
+            "CIN" => Instruction::CharInput(
+                self.parse_destination(chunks[1])?,
+                self.parse_source(chunks[2])?,
+            ),
             "OUT" => Instruction::Output(self.parse_source(chunks[1])?),
+            "COUT" => Instruction::CharOutput(self.parse_source(chunks[1])?),
             "ADD" => Instruction::Add(
                 self.parse_source(chunks[1])?,
                 self.parse_source(chunks[2])?,
