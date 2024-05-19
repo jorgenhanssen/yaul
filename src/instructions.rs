@@ -17,6 +17,7 @@ pub enum Instruction {
     JumpLessThan(Source, Source, Label),
     Call(Label),
     Time(Destination),
+    Fault(String),
     Syscall(
         Destination,
         Source,

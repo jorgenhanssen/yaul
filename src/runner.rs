@@ -215,6 +215,9 @@ impl Runner {
                         self.registers[_destination as usize] = ret as i64;
                     }
                 }
+                Instruction::Fault(msg) => {
+                    panic!("Program fault: {}", msg);
+                }
             }
 
             pc += 1;
