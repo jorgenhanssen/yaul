@@ -5,7 +5,7 @@ use std::io::{self, Read};
 
 pub struct Runner {
     instructions: Vec<Instruction>,
-    registers: [i64; 4096],
+    registers: [i64; 8192],
     stack: Vec<usize>,
 }
 
@@ -13,7 +13,7 @@ impl Runner {
     pub fn new(instructions: Vec<Instruction>) -> Self {
         Self {
             instructions,
-            registers: [0; 4096],
+            registers: [0; 8192],
             stack: Vec::new(),
         }
     }
