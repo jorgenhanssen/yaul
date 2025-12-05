@@ -1,0 +1,31 @@
+// Hello
+set '72' 1
+set '101' 2
+set '108' 3
+set '108' 4
+set '111' 5
+
+// Space
+set '32' 6
+
+// world
+set '119' 7
+set '111' 8
+set '114' 9
+set '108' 10
+set '100' 11
+
+// Loop counter
+set '1' 0
+
+// Loop over each character and print
+loop:
+jgt 0 '11' end
+
+cout &0
+
+add '1' 0 0
+jmp loop
+
+end:
+ret

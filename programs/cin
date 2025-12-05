@@ -1,0 +1,17 @@
+cin 1 '100'
+
+// Char index
+set '1' 0
+
+// Loop until we reach a newline (10) or over 100 characters
+loop:
+jeq &0 '10' end
+jgt 0 '100' end
+
+cout &0
+
+add '1' 0 0
+jmp loop
+
+end:
+ret

@@ -88,7 +88,12 @@ impl Parser {
                 self.parse_destination(chunks[2])?,
             ),
             "IN" => Instruction::Input(self.parse_destination(chunks[1])?),
+            "CIN" => Instruction::CharInput(
+                self.parse_destination(chunks[1])?,
+                self.parse_source(chunks[2])?,
+            ),
             "OUT" => Instruction::Output(self.parse_source(chunks[1])?),
+            "COUT" => Instruction::CharOutput(self.parse_source(chunks[1])?),
             "ADD" => Instruction::Add(
                 self.parse_source(chunks[1])?,
                 self.parse_source(chunks[2])?,
@@ -142,6 +147,7 @@ impl Parser {
                 self.parse_optional_source(chunks.get(7))?,
                 self.parse_optional_source(chunks.get(8))?,
             ),
+            "FAULT" => Instruction::Fault(self.parse_fault_message(chunks[1..].join(" "))?),
             _ => {
                 return Err(ParseError::new(
                     &format!("Unknown instruction: {}", instruction_id),
@@ -298,6 +304,18 @@ impl Parser {
             }
         }
         return false;
+    }
+
+    fn parse_fault_message(&self, message: String) -> Result<String, ParseError> {
+        if !message.starts_with("\"") || !message.ends_with("\"") {
+            return Err(ParseError::new(
+                "Fault message should be enclosed in double quotes",
+                None,
+            ));
+        }
+
+        // Trim quotes
+        return Ok(message[1..message.len() - 1].to_string());
     }
 }
 

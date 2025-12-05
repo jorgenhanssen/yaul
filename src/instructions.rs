@@ -3,7 +3,9 @@ pub enum Instruction {
     Return,
     Set(Source, Destination),
     Input(Destination),
+    CharInput(Destination, Source),
     Output(Source),
+    CharOutput(Source),
     Add(Source, Source, Destination),
     Subtract(Source, Source, Destination),
     Multiply(Source, Source, Destination),
@@ -15,6 +17,7 @@ pub enum Instruction {
     JumpLessThan(Source, Source, Label),
     Call(Label),
     Time(Destination),
+    Fault(String),
     Syscall(
         Destination,
         Source,
