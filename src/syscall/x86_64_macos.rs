@@ -1,11 +1,11 @@
 use core::arch::asm;
 
 // Syscalls for macos x86_64 can be found here:
-// https://opensource.apple.com/source/xnu/xnu-1504.3.12/bsd/kern/syscalls.master
+// https://github.com/apple-oss-distributions/xnu/blob/main/bsd/kern/syscalls.master
 
 // macos x86_64 syscalls have an offset of 0x2000000 (2 << 24)
 // https://modexp.wordpress.com/2017/01/21/shellcode-osx/
-// https://opensource.apple.com/source/xnu/xnu-792.13.8/osfmk/mach/i386/syscall_sw.h
+// https://github.com/apple-oss-distributions/xnu/blob/main/osfmk/mach/syscall_sw.h
 const SYSCALL_SHIFT: usize = 0x2000000;
 
 pub unsafe fn syscall0(n: usize) -> usize {

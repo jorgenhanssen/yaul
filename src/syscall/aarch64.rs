@@ -1,7 +1,7 @@
 use core::arch::asm;
 
-// macOS syscalls have an offset of 0x2000000 (2 << 24)
-// https://opensource.apple.com/source/xnu/xnu-792.13.8/osfmk/mach/i386/syscall_sw.h
+// macOS syscalls have an offset of 0x2000000 (SYSCALL_CLASS_UNIX << SYSCALL_CLASS_SHIFT)
+// https://github.com/apple-oss-distributions/xnu/blob/main/osfmk/mach/syscall_sw.h
 const SYSCALL_SHIFT: usize = 0x2000000;
 
 pub unsafe fn syscall0(n: usize) -> usize {

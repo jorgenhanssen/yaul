@@ -4,7 +4,7 @@
 // Note that syscalls are platform-specific, so the syscall number for the target platform must be used.
 
 // This is a syscall example for Mac x86_64
-// ref: https://opensource.apple.com/source/xnu/xnu-1504.3.12/bsd/kern/syscalls.master
+// ref: https://github.com/apple-oss-distributions/xnu/blob/main/bsd/kern/syscalls.master
 
 // Get PID into register 0
 sys 0 '20'
