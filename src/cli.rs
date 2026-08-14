@@ -10,6 +10,10 @@ pub struct CLI {
     #[arg(long, default_value_t = 8192, value_parser = clap::value_parser!(u64).range(1..))]
     pub registers: u64,
 
+    /// Runs instructions faster by sacrificing safety.
+    #[arg(long)]
+    pub fast: bool,
+
     #[arg(long)]
     pub logs: Option<String>,
 

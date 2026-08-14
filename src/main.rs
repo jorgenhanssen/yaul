@@ -23,5 +23,9 @@ fn main() {
     println!("Compiled in {:?}", compile_time);
 
     let mut runner = runner::Runner::new(args.registers as usize);
-    runner.run(&instructions);
+    if args.fast {
+        runner.run::<true>(&instructions);
+    } else {
+        runner.run::<false>(&instructions);
+    }
 }
