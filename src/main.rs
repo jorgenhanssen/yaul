@@ -22,6 +22,6 @@ fn main() {
     let compile_time = compile_start_time.elapsed();
     println!("Compiled in {:?}", compile_time);
 
-    let mut runner = runner::Runner::new(instructions);
-    runner.run();
+    let mut runner = runner::Runner::new(args.registers as usize);
+    runner.run(&instructions);
 }

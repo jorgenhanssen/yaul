@@ -4,30 +4,31 @@ use crate::syscall::syscall;
 use std::io::{self, Read};
 
 pub struct Runner {
-    instructions: Vec<Instruction>,
-    registers: [i64; 8192],
+    registers: Vec<i64>,
     stack: Vec<usize>,
 }
 
 impl Runner {
-    pub fn new(instructions: Vec<Instruction>) -> Self {
+    pub fn new(register_count: usize) -> Self {
         Self {
-            instructions,
-            registers: [0; 8192],
+            registers: vec![0; register_count],
             stack: Vec::new(),
         }
     }
 
-    pub fn run(&mut self) {
+    pub fn run(&mut self, instructions: &[Instruction]) {
+        self.registers.fill(0);
+        self.stack.clear();
+
         let mut pc = 0;
-        let max_pc = self.instructions.len();
+        let max_pc = instructions.len();
 
         loop {
             if pc >= max_pc {
                 break;
             }
 
-            let instruction = &self.instructions[pc];
+            let instruction = &instructions[pc];
 
             match instruction {
                 Instruction::Return => {

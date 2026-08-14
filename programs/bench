@@ -2,7 +2,7 @@
 time 100 // store start time in reg 100
 
 // Large prime to check (reg 1)
-set '50728129' 1
+set '2147483647' 1
 
 // Set variables
 set '1' 2       // reg 2 holds if the number is prime, we assume it is so we put 1
