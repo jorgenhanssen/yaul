@@ -229,10 +229,7 @@ impl Runner {
         &self,
         param: &Option<crate::instructions::Source>,
     ) -> Option<i64> {
-        match param {
-            Some(value) => Some(self.read_source::<FAST>(value)),
-            None => None,
-        }
+        param.as_ref().map(|value| self.read_source::<FAST>(value))
     }
 
     fn read_source<const FAST: bool>(&self, param: &crate::instructions::Source) -> i64 {
@@ -276,8 +273,5 @@ impl Runner {
 }
 
 fn optional_int_to_usize(value: Option<i64>) -> Option<usize> {
-    match value {
-        Some(value) => Some(value as usize),
-        None => None,
-    }
+    value.map(|value| value as usize)
 }

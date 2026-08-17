@@ -58,21 +58,18 @@ impl Parser {
                 continue;
             }
 
-            match self.parse_instruction(&line) {
-                Ok(instruction) => instructions.push(instruction),
-                Err(e) => return Err(e),
-            }
+            instructions.push(self.parse_instruction(&line)?);
         }
 
         self.resolve_labels(&mut instructions)?;
 
-        return Ok(instructions);
+        Ok(instructions)
     }
 
     fn parse_instruction(&mut self, line: &str) -> Result<Instruction, ParseError> {
         // TODO: Clean up
         let sanitized_line = if let Some(index) = line.find("//") {
-            &line[..index].trim()
+            line[..index].trim()
         } else {
             line.trim()
         };
@@ -174,7 +171,7 @@ impl Parser {
     }
 
     fn parse_source(&self, chunk: &str) -> Result<Source, ParseError> {
-        if chunk == "" {
+        if chunk.is_empty() {
             return Err(ParseError::new("Parameter should not be empty", None));
         }
 
@@ -186,8 +183,7 @@ impl Parser {
         }
 
         // Reference
-        if chunk.starts_with("&") {
-            let text = chunk[1..].to_string();
+        if let Some(text) = chunk.strip_prefix("&") {
             let value = text.parse::<usize>().unwrap();
             return Ok(Source::Reference(value));
         }
@@ -199,13 +195,12 @@ impl Parser {
     }
 
     fn parse_destination(&self, chunk: &str) -> Result<Destination, ParseError> {
-        if chunk == "" {
+        if chunk.is_empty() {
             return Err(ParseError::new("Parameter should not be empty", None));
         }
 
         // Reference
-        if chunk.starts_with("&") {
-            let text = chunk[1..].to_string();
+        if let Some(text) = chunk.strip_prefix("&") {
             let value = text.parse::<usize>().unwrap();
             return Ok(Destination::Reference(value));
         }
@@ -217,7 +212,7 @@ impl Parser {
     }
 
     fn parse_label(&mut self, chunk: &str) -> Result<Label, ParseError> {
-        if chunk == "" {
+        if chunk.is_empty() {
             return Err(ParseError::new("Label should not be empty", None));
         }
         if chunk.starts_with("&") {
@@ -243,7 +238,7 @@ impl Parser {
         }
     }
 
-    fn resolve_labels(&mut self, instructions: &mut Vec<Instruction>) -> Result<(), ParseError> {
+    fn resolve_labels(&mut self, instructions: &mut [Instruction]) -> Result<(), ParseError> {
         // Resolve unresolved labels
         // TODO: Only loop over unresolved labels, and refactor
         for instruction in instructions.iter_mut() {
@@ -272,7 +267,7 @@ impl Parser {
     }
 
     fn line_is_non_functional(&self, line: &str) -> bool {
-        if line == "" {
+        if line.is_empty() {
             return true;
         }
 
@@ -291,7 +286,7 @@ impl Parser {
             }
         }
 
-        return false;
+        false
     }
 
     fn line_is_label(&self, line: &str) -> bool {
@@ -303,7 +298,7 @@ impl Parser {
                 return true;
             }
         }
-        return false;
+        false
     }
 
     fn parse_fault_message(&self, message: String) -> Result<String, ParseError> {
@@ -315,7 +310,7 @@ impl Parser {
         }
 
         // Trim quotes
-        return Ok(message[1..message.len() - 1].to_string());
+        Ok(message[1..message.len() - 1].to_string())
     }
 }
 
@@ -341,13 +336,13 @@ impl ParseError {
 }
 impl fmt::Display for ParseError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        if self.line.is_some() {
+        if let Some(line) = &self.line {
             write!(
                 f,
                 "{}\nLine: {}\nContents: {}",
                 self.error,
-                self.line.as_ref().unwrap().line,
-                self.line.as_ref().unwrap().contents.as_ref().unwrap()
+                line.line,
+                line.contents.as_deref().unwrap_or("")
             )
         } else {
             write!(f, "{}", self.error)
