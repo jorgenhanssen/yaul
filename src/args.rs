@@ -6,7 +6,7 @@ use std::path::PathBuf;
 #[command(author = "Jørgen Hanssen")]
 #[command(version = "0.1.0")]
 #[command(about = "Yet Another Useless Language")]
-pub struct CLI {
+pub struct Args {
     #[arg(long, default_value_t = 8192, value_parser = clap::value_parser!(u64).range(1..))]
     pub registers: u64,
 

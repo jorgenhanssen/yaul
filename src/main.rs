@@ -1,14 +1,14 @@
-mod cli;
+mod args;
 mod instructions;
 mod parser;
 mod runner;
 mod syscall;
 
+use args::Args;
 use clap::Parser;
-use cli::CLI;
 
 fn main() {
-    let args = CLI::parse();
+    let args = Args::parse();
 
     let mut parser = parser::Parser::new(args.file);
 
